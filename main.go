@@ -1,7 +1,10 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/labstack/echo/v4"
+	"github.com/mojtabafarzaneh/social_media/src/config"
 	"github.com/mojtabafarzaneh/social_media/src/db"
 	echoSwagger "github.com/swaggo/echo-swagger"
 
@@ -19,8 +22,9 @@ func init() {
 
 func main() {
 	e := echo.New()
-
+	config.Set()
+	configs := config.Get()
 	e.GET("/docs/*", echoSwagger.WrapHandler)
 
-	e.Logger.Fatal(e.Start(":3000"))
+	e.Logger.Fatal(e.Start(fmt.Sprintf("%s:%s", configs.Server.Host, configs.Server.Port)))
 }
