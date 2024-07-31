@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"log"
@@ -7,8 +7,7 @@ import (
 	"github.com/mojtabafarzaneh/social_media/src/types"
 )
 
-func main() {
-
+func Migration() {
 	db, err := db.ConnectToDB()
 	if err != nil {
 		log.Fatal(err)
