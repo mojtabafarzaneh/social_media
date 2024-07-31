@@ -3,10 +3,11 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/labstack/echo/v4"
+	"github.com/gin-gonic/gin"
 	"github.com/mojtabafarzaneh/social_media/src/config"
+	"github.com/mojtabafarzaneh/social_media/src/db"
+	"github.com/mojtabafarzaneh/social_media/src/handlers"
 	"github.com/spf13/cobra"
-	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
 func init() {
@@ -22,10 +23,13 @@ var ServeCmd = &cobra.Command{
 }
 
 func Serve() {
-	e := echo.New()
+	app := gin.Default()
 	config.Set()
 	configs := config.Get()
-	e.GET("/docs/*", echoSwagger.WrapHandler)
+	db.ConnectToDB()
+	hc := handlers.NewControler()
+	//app.GET("/docs/*", echoSwagger.WrapHandler)
+	app.GET("/", hc.ListUserHandler)
 
-	e.Logger.Fatal(e.Start(fmt.Sprintf("%s:%s", configs.Server.Host, configs.Server.Port)))
+	app.Run(fmt.Sprintf("%s:%s", configs.Server.Host, configs.Server.Port))
 }
