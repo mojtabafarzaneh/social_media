@@ -1,8 +1,11 @@
 build:
 	@go build -o bin/api
 
-run: build
+help: build
 	@./bin/api
+
+serve: 
+	@go run main.go serve
 
 work:
 	@CompileDaemon -command=./[executable-file]
