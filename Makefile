@@ -7,5 +7,11 @@ help: build
 serve: 
 	@go run main.go serve
 
+migrate:
+	@go run main.go migrate
+
+seed:
+	@go run main.go seed
+
 work:
 	@CompileDaemon -command=./[executable-file]
