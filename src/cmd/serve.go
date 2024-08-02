@@ -30,6 +30,10 @@ func Serve() {
 	hc := handlers.NewControler()
 	//app.GET("/docs/*", echoSwagger.WrapHandler)
 	app.GET("/", hc.ListUserHandler)
+	app.GET("/:id", hc.GetUserHandler)
+	app.POST("/", hc.InsertUserHandler)
+	app.DELETE("/:id", hc.DeleteUserHandler)
+	app.PUT("/:id/username", hc.UpdateUsernameHandler)
 
 	app.Run(fmt.Sprintf("%s:%s", configs.Server.Host, configs.Server.Port))
 }
