@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"errors"
 
 	"github.com/mojtabafarzaneh/social_media/src/db"
 	"github.com/mojtabafarzaneh/social_media/src/types"
@@ -27,22 +26,25 @@ func NewUserRepository() *UserRepository {
 	}
 }
 
-func (r *UserRepository) ListUser(ctx context.Context) []*types.User {
+func (r *UserRepository) ListUser(ctx context.Context) ([]*types.User, error) {
 	var users []*types.User
-	r.DB.WithContext(ctx).Find(&users)
-	return users
+	err := r.DB.WithContext(ctx).Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
 }
 
-func (r *UserRepository) GetUserByID(ctx context.Context, id string) (*types.User, error) {
-	var user types.User
+func (r *UserRepository) GetUserByID(ctx context.Context, id string) ([]*types.User, error) {
+	var user []*types.User
 
 	err := r.DB.WithContext(ctx).First(&user, id).Error
 
-	if errors.Is(err, gorm.ErrRecordNotFound) {
+	if err != nil {
 		return nil, err
 	}
 
-	return &user, nil
+	return user, nil
 
 }
 
@@ -51,26 +53,27 @@ func (r *UserRepository) CreateUser(ctx context.Context, user types.User) ([]*ty
 
 	err := r.DB.Create(&users).Error
 
-	if errors.Is(err, gorm.ErrInvalidData) {
+	if err != nil {
 		return nil, err
 	}
 	return users, nil
 }
 
-func (r *UserRepository) DeleteUser(ctx context.Context, id string) []*types.User {
+func (r *UserRepository) DeleteUser(ctx context.Context, id string) error {
 	var user []*types.User
-	r.DB.Delete(user, id)
+	if err := r.DB.Delete(user, id).Error; err != nil {
+		return err
+	}
 
-	return user
+	return nil
 }
 
-func (r *UserRepository) UpdateUsername(username string, id uint) (*types.User, error) {
-	var user types.User
+func (r *UserRepository) UpdateUsername(username string, id uint) error {
+	var user []*types.User
 	err := r.DB.Model(&user).Where("id = ?", id).Update("username", username).Error
 
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	return &user, nil
+	return nil
 }
