@@ -16,7 +16,7 @@ type User struct {
 	DeletedAt sql.NullTime `gorm:"index"`
 	Username  string       `gorm:"unique" json:"username"`
 	Password  string       `json:"password"`
-	Email     string       `json:"email"`
+	Email     string       `gorm:"unique" json:"email"`
 }
 
 type CreateUserParams struct {

@@ -21,9 +21,13 @@ func NewControler() *Controler {
 
 func (cl *Controler) ListUserHandler(c *gin.Context) {
 
-	user := cl.UserRepository.ListUser(c)
-	showcase := types.UsersToUserResponses(user)
-	c.JSON(http.StatusOK, showcase)
+	user, err := cl.UserRepository.ListUser(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request!"})
+		return
+	}
+	userList := types.UsersToUserResponses(user)
+	c.JSON(http.StatusOK, userList)
 }
 
 func (cl *Controler) GetUserHandler(c *gin.Context) {
@@ -32,33 +36,39 @@ func (cl *Controler) GetUserHandler(c *gin.Context) {
 	user, err := cl.UserRepository.GetUserByID(c, id)
 
 	if err != nil {
-		c.JSON(http.StatusNotFound, map[string]string{"error": "user not found"})
-
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found!"})
+		return
 	}
 
-	c.JSON(http.StatusOK, user)
+	showcase := types.UsersToUserResponses(user)
+
+	c.JSON(http.StatusOK, showcase)
+
 }
 
 func (cl *Controler) InsertUserHandler(c *gin.Context) {
 	var params types.CreateUserParams
 
 	if err := c.BindJSON(&params); err != nil {
-		c.JSON(http.StatusFailedDependency, err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
-	if err := params.Validate(); len(err) > 0 {
-		c.JSON(http.StatusBadRequest, err)
+	if validationErrors := params.Validate(); len(validationErrors) > 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "validation failed", "details": validationErrors})
+		return
 	}
 
 	user, err := types.NewUserFromParams(params)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	insertedUser, err := cl.UserRepository.CreateUser(c, *user)
-
 	if err != nil {
-		c.JSON(http.StatusBadRequest, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to insert user", "details": err.Error()})
+		return
 	}
 
 	showcase := types.UsersToUserResponses(insertedUser)
@@ -70,7 +80,24 @@ func (cl *Controler) InsertUserHandler(c *gin.Context) {
 func (cl *Controler) DeleteUserHandler(c *gin.Context) {
 
 	var id = c.Params.ByName("id")
-	c.JSON(http.StatusNoContent, cl.UserRepository.DeleteUser(c, id))
+
+	_, err := cl.UserRepository.GetUserByID(c, id)
+
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error":   "user not found!",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	err = cl.UserRepository.DeleteUser(c, id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"err":     "failed to find the user",
+			"details": err.Error(),
+		})
+	}
 }
 
 func (cl *Controler) UpdateUsernameHandler(c *gin.Context) {
@@ -87,11 +114,11 @@ func (cl *Controler) UpdateUsernameHandler(c *gin.Context) {
 		return
 	}
 
-	user, err := cl.UserRepository.UpdateUsername(params.Username, uint(id))
+	err = cl.UserRepository.UpdateUsername(params.Username, uint(id))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update username"})
 		return
 	}
 
-	c.JSON(http.StatusAccepted, user)
+	c.JSON(http.StatusAccepted, gin.H{"massage": "username updated"})
 }
