@@ -10,13 +10,21 @@ import (
 )
 
 type User struct {
-	ID        uint         `gorm:"primarykey" json:"Id"`
-	CreatedAt time.Time    `json:"created_at"`
-	UpdatedAt time.Time    `json:"updated_at"`
+	ID        uint `gorm:"primarykey"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Username  string `gorm:"unique" json:"username"`
+	Password  string `json:"password"`
+	Email     string `gorm:"unique" json:"email"`
+	Post      []Post
+}
+type Post struct {
+	ID        uint `gorm:"primarykey"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
 	DeletedAt sql.NullTime `gorm:"index"`
-	Username  string       `gorm:"unique" json:"username"`
-	Password  string       `json:"password"`
-	Email     string       `gorm:"unique" json:"email"`
+	Content   string
+	UserID    uint
 }
 
 type CreateUserParams struct {

@@ -77,3 +77,10 @@ func (r *UserRepository) UpdateUsername(username string, id uint) error {
 	}
 	return nil
 }
+
+func (r *UserRepository) GetAll() ([]types.Post, error) {
+	var posts []types.Post
+	err := r.DB.Model(&types.Post{}).Preload("User").Find(&posts).Error
+
+	return posts, err
+}
