@@ -1,7 +1,6 @@
 package types
 
 import (
-	"database/sql"
 	"fmt"
 	"regexp"
 	"time"
@@ -16,15 +15,8 @@ type User struct {
 	Username  string `gorm:"unique" json:"username"`
 	Password  string `json:"password"`
 	Email     string `gorm:"unique" json:"email"`
-	Post      []Post
-}
-type Post struct {
-	ID        uint `gorm:"primarykey"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt sql.NullTime `gorm:"index"`
-	Content   string
-	UserID    uint
+	Post      []Post `gorm:"foreignKey:Author"`
+	IsAdmin   bool
 }
 
 type CreateUserParams struct {

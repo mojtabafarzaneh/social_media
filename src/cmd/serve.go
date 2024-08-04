@@ -24,18 +24,26 @@ var ServeCmd = &cobra.Command{
 
 func Serve() {
 	app := gin.Default()
-	user := app.Group("/users")
 	config.Set()
 	configs := config.Get()
 	db.ConnectToDB()
 	hc := handlers.NewControler()
 	//app.GET("/docs/*", echoSwagger.WrapHandler)
+
+	//users router
+	user := app.Group("/users")
 	user.GET("/", hc.ListUserHandler)
 	user.GET("/:id", hc.GetUserHandler)
 	user.POST("/", hc.InsertUserHandler)
 	user.DELETE("/:id", hc.DeleteUserHandler)
 	user.PUT("/:id/username", hc.UpdateUsernameHandler)
-	user.GET("/hell", hc.Getallhandle)
+
+	post := app.Group("/posts")
+	post.GET("/", func(ctx *gin.Context) {
+		ctx.JSON(200, gin.H{
+			"details": "working just fine",
+		})
+	})
 
 	app.Run(fmt.Sprintf("%s:%s", configs.Server.Host, configs.Server.Port))
 }

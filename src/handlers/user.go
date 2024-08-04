@@ -10,12 +10,12 @@ import (
 )
 
 type Controler struct {
-	UserRepository repository.UserRepository
+	UserRepository repository.PostgresRep
 }
 
 func NewControler() *Controler {
 	return &Controler{
-		UserRepository: *repository.NewUserRepository(),
+		UserRepository: *repository.NewUserPostgresRep(),
 	}
 }
 
@@ -121,17 +121,4 @@ func (cl *Controler) UpdateUsernameHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusAccepted, gin.H{"massage": "username updated"})
-}
-
-func (cl *Controler) Getallhandle(c *gin.Context) {
-	content, err := cl.UserRepository.GetAll()
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error":   "user not found!",
-			"details": err.Error(),
-		})
-	}
-
-	c.JSON(200, content)
-
 }
