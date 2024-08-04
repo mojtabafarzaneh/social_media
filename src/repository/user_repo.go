@@ -16,17 +16,17 @@ type User interface {
 	UpdateUsername(ctx context.Context, username string) []*types.User
 }
 
-type UserRepository struct {
+type PostgresRep struct {
 	DB *gorm.DB
 }
 
-func NewUserRepository() *UserRepository {
-	return &UserRepository{
+func NewUserPostgresRep() *PostgresRep {
+	return &PostgresRep{
 		DB: db.ConnectToDB(),
 	}
 }
 
-func (r *UserRepository) ListUser(ctx context.Context) ([]*types.User, error) {
+func (r *PostgresRep) ListUser(ctx context.Context) ([]*types.User, error) {
 	var users []*types.User
 	err := r.DB.WithContext(ctx).Find(&users).Error
 	if err != nil {
@@ -35,7 +35,7 @@ func (r *UserRepository) ListUser(ctx context.Context) ([]*types.User, error) {
 	return users, nil
 }
 
-func (r *UserRepository) GetUserByID(ctx context.Context, id string) ([]*types.User, error) {
+func (r *PostgresRep) GetUserByID(ctx context.Context, id string) ([]*types.User, error) {
 	var user []*types.User
 
 	err := r.DB.WithContext(ctx).First(&user, id).Error
@@ -48,7 +48,7 @@ func (r *UserRepository) GetUserByID(ctx context.Context, id string) ([]*types.U
 
 }
 
-func (r *UserRepository) CreateUser(ctx context.Context, user types.User) ([]*types.User, error) {
+func (r *PostgresRep) CreateUser(ctx context.Context, user types.User) ([]*types.User, error) {
 	var users = []*types.User{{Username: user.Username, Email: user.Email, Password: user.Password}}
 
 	err := r.DB.Create(&users).Error
@@ -59,7 +59,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, user types.User) ([]*ty
 	return users, nil
 }
 
-func (r *UserRepository) DeleteUser(ctx context.Context, id string) error {
+func (r *PostgresRep) DeleteUser(ctx context.Context, id string) error {
 	var user []*types.User
 	if err := r.DB.Delete(user, id).Error; err != nil {
 		return err
@@ -68,7 +68,7 @@ func (r *UserRepository) DeleteUser(ctx context.Context, id string) error {
 	return nil
 }
 
-func (r *UserRepository) UpdateUsername(username string, id uint) error {
+func (r *PostgresRep) UpdateUsername(username string, id uint) error {
 	var user []*types.User
 	err := r.DB.Model(&user).Where("id = ?", id).Update("username", username).Error
 

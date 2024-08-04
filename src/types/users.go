@@ -1,7 +1,6 @@
 package types
 
 import (
-	"database/sql"
 	"fmt"
 	"regexp"
 	"time"
@@ -10,13 +9,14 @@ import (
 )
 
 type User struct {
-	ID        uint         `gorm:"primarykey" json:"Id"`
-	CreatedAt time.Time    `json:"created_at"`
-	UpdatedAt time.Time    `json:"updated_at"`
-	DeletedAt sql.NullTime `gorm:"index"`
-	Username  string       `gorm:"unique" json:"username"`
-	Password  string       `json:"password"`
-	Email     string       `gorm:"unique" json:"email"`
+	ID        uint `gorm:"primarykey"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Username  string `gorm:"unique" json:"username"`
+	Password  string `json:"password"`
+	Email     string `gorm:"unique" json:"email"`
+	Post      []Post `gorm:"foreignKey:Author"`
+	IsAdmin   bool
 }
 
 type CreateUserParams struct {

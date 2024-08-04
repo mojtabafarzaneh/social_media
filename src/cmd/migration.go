@@ -24,7 +24,7 @@ var MigrateCmd = &cobra.Command{
 func Migration() {
 	db := db.ConnectToDB()
 
-	if err := db.AutoMigrate(&types.User{}); err != nil {
+	if err := db.AutoMigrate(&types.User{}, &types.Post{}); err != nil {
 		log.Fatal(err)
 		return
 	}

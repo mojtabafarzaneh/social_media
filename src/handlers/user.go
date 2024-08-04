@@ -10,12 +10,12 @@ import (
 )
 
 type Controler struct {
-	UserRepository repository.UserRepository
+	UserRepository repository.PostgresRep
 }
 
 func NewControler() *Controler {
 	return &Controler{
-		UserRepository: *repository.NewUserRepository(),
+		UserRepository: *repository.NewUserPostgresRep(),
 	}
 }
 
