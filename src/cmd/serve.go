@@ -27,7 +27,7 @@ func Serve() {
 	config.Set()
 	configs := config.Get()
 	db.ConnectToDB()
-	hc := handlers.NewControler()
+	hc := handlers.NewUserControler()
 	//app.GET("/docs/*", echoSwagger.WrapHandler)
 
 	//users router
@@ -38,12 +38,14 @@ func Serve() {
 	user.DELETE("/:id", hc.DeleteUserHandler)
 	user.PUT("/:id/username", hc.UpdateUsernameHandler)
 
+	//posts router
 	post := app.Group("/posts")
-	post.GET("/", func(ctx *gin.Context) {
-		ctx.JSON(200, gin.H{
-			"details": "working just fine",
-		})
-	})
+	pc := handlers.NewPostController()
+	post.GET("/", pc.ListPostsHandler)
+	post.GET("/:id", pc.GetPostHandler)
+	post.POST("/", pc.CreatePostHandler)
+	post.PUT("/:id", pc.UpdatePostsHandler)
+	post.DELETE("/:id", pc.DeletePostHandler)
 
 	app.Run(fmt.Sprintf("%s:%s", configs.Server.Host, configs.Server.Port))
 }

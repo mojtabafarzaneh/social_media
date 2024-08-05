@@ -31,6 +31,7 @@ type ResponseUser struct {
 	Email     string    `json:"email"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+	Post      []Post    `json:"posts"`
 }
 
 func NewUserFromParams(params CreateUserParams) (*User, error) {
@@ -72,20 +73,22 @@ func (p *CreateUserParams) Validate() map[string]string {
 
 }
 
-func (u *User) ShowCaseUser() *ResponseUser {
+func (u *User) ResponseUser() *ResponseUser {
+
 	return &ResponseUser{
 		ID:        u.ID,
 		Email:     u.Email,
 		Username:  u.Username,
 		CreatedAt: u.CreatedAt,
 		UpdatedAt: u.UpdatedAt,
+		Post:      u.Post,
 	}
 }
 
 func UsersToUserResponses(users []*User) []ResponseUser {
 	userResponses := make([]ResponseUser, len(users))
 	for i, user := range users {
-		userResponses[i] = *user.ShowCaseUser()
+		userResponses[i] = *user.ResponseUser()
 	}
 	return userResponses
 }

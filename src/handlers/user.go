@@ -9,28 +9,28 @@ import (
 	"github.com/mojtabafarzaneh/social_media/src/types"
 )
 
-type Controler struct {
+type UserControler struct {
 	UserRepository repository.PostgresRep
 }
 
-func NewControler() *Controler {
-	return &Controler{
+func NewUserControler() *UserControler {
+	return &UserControler{
 		UserRepository: *repository.NewUserPostgresRep(),
 	}
 }
 
-func (cl *Controler) ListUserHandler(c *gin.Context) {
+func (cl *UserControler) ListUserHandler(c *gin.Context) {
 
 	user, err := cl.UserRepository.ListUser(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request!"})
 		return
 	}
-	userList := types.UsersToUserResponses(user)
-	c.JSON(http.StatusOK, userList)
+	response := types.UsersToUserResponses(user)
+	c.JSON(http.StatusOK, response)
 }
 
-func (cl *Controler) GetUserHandler(c *gin.Context) {
+func (cl *UserControler) GetUserHandler(c *gin.Context) {
 
 	var id = c.Params.ByName("id")
 	user, err := cl.UserRepository.GetUserByID(c, id)
@@ -40,13 +40,13 @@ func (cl *Controler) GetUserHandler(c *gin.Context) {
 		return
 	}
 
-	showcase := types.UsersToUserResponses(user)
+	response := types.UsersToUserResponses(user)
 
-	c.JSON(http.StatusOK, showcase)
+	c.JSON(http.StatusOK, response)
 
 }
 
-func (cl *Controler) InsertUserHandler(c *gin.Context) {
+func (cl *UserControler) InsertUserHandler(c *gin.Context) {
 	var params types.CreateUserParams
 
 	if err := c.BindJSON(&params); err != nil {
@@ -77,7 +77,7 @@ func (cl *Controler) InsertUserHandler(c *gin.Context) {
 
 }
 
-func (cl *Controler) DeleteUserHandler(c *gin.Context) {
+func (cl *UserControler) DeleteUserHandler(c *gin.Context) {
 
 	var id = c.Params.ByName("id")
 
@@ -100,7 +100,7 @@ func (cl *Controler) DeleteUserHandler(c *gin.Context) {
 	}
 }
 
-func (cl *Controler) UpdateUsernameHandler(c *gin.Context) {
+func (cl *UserControler) UpdateUsernameHandler(c *gin.Context) {
 	var params types.UpdateUsernameParams
 
 	id, err := strconv.Atoi(c.Param("id"))
