@@ -28,7 +28,7 @@ func NewUserPostgresRep() *PostgresRep {
 
 func (r *PostgresRep) ListUser(ctx context.Context) ([]*types.User, error) {
 	var users []*types.User
-	err := r.DB.WithContext(ctx).Find(&users).Error
+	err := r.DB.WithContext(ctx).Preload("Post").Find(&users).Error
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (r *PostgresRep) ListUser(ctx context.Context) ([]*types.User, error) {
 func (r *PostgresRep) GetUserByID(ctx context.Context, id string) ([]*types.User, error) {
 	var user []*types.User
 
-	err := r.DB.WithContext(ctx).First(&user, id).Error
+	err := r.DB.Preload("Post").First(&user, id).Error
 
 	if err != nil {
 		return nil, err
