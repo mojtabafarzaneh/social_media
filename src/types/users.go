@@ -9,14 +9,22 @@ import (
 )
 
 type User struct {
-	ID        uint `gorm:"primarykey"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	Username  string `gorm:"unique" json:"username"`
-	Password  string `json:"password"`
-	Email     string `gorm:"unique" json:"email"`
-	Post      []Post `gorm:"foreignKey:Author"`
-	IsAdmin   bool
+	ID         uint `gorm:"primarykey"`
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+	Username   string `gorm:"unique" json:"username"`
+	Password   string `json:"password"`
+	Email      string `gorm:"unique" json:"email"`
+	Post       []Post `gorm:"foreignKey:Author"`
+	IsAdmin    bool
+	Subscriber []Subscription `gorm:"foreignKey:SubscriberID"`
+	Target     []Subscription `gorm:"foreignKey:TargetID"`
+	Profile    Profile
+}
+type Profile struct {
+	UserId            uint
+	SubscriberCount   uint `json:"subscriberCount"`
+	SubscriptionCount uint `json:"subscriptionCount"`
 }
 
 type CreateUserParams struct {
