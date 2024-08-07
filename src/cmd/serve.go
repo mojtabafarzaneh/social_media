@@ -47,5 +47,11 @@ func Serve() {
 	post.PUT("/:id", pc.UpdatePostsHandler)
 	post.DELETE("/:id", pc.DeletePostHandler)
 
+	//subs router
+	subs := app.Group("/subs")
+	sc := handlers.NewSubsController()
+	subs.GET("/subscriptions/:id", sc.GetAllSubscriptions)
+	subs.GET("/subscribers/:id", sc.GetAllSubscribed)
+
 	app.Run(fmt.Sprintf("%s:%s", configs.Server.Host, configs.Server.Port))
 }
