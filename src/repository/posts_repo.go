@@ -12,6 +12,7 @@ type Post interface {
 	GetAllPosts(ctx context.Context) ([]*types.Post, error)
 	InsertPost(ctx context.Context, post types.Post) ([]*types.Post, error)
 	UpdatePost(ctx context.Context, id string) ([]*types.Post, error)
+	DeletePost(ctx context.Context, id string) error
 }
 
 type PostgresPostRepo struct {
