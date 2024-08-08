@@ -42,6 +42,10 @@ type ResponseUser struct {
 	Post      []Post    `json:"posts"`
 }
 
+type UpdateUsernameParams struct {
+	Username string `json:"username"`
+}
+
 func NewUserFromParams(params CreateUserParams) (*User, error) {
 	encpw, err := bcrypt.GenerateFromPassword([]byte(params.Password), 12)
 
@@ -99,8 +103,4 @@ func UsersToUserResponses(users []*User) []ResponseUser {
 		userResponses[i] = *user.ResponseUser()
 	}
 	return userResponses
-}
-
-type UpdateUsernameParams struct {
-	Username string `json:"username"`
 }

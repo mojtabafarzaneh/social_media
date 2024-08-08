@@ -23,7 +23,7 @@ func NewSubsController() *SubsController {
 func (sc *SubsController) GetAllSubscriptions(c *gin.Context) {
 	id := c.Params.ByName("id")
 
-	subs, err := sc.SubsRepository.GetAllSubs(c, id)
+	subs, err := sc.SubsRepository.GetAllSubscriptions(c, id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error":   "user not found",
