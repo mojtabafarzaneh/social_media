@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/mojtabafarzaneh/social_media/src/db"
 	"github.com/mojtabafarzaneh/social_media/src/types"
@@ -66,4 +67,34 @@ func (ps *PostgresSubsRepo) GetAllSubscribed(ctx context.Context, id uint) ([]*t
 	}
 
 	return subscribers, nil
+}
+
+func (ps *PostgresSubsRepo) CreateSubscription(ctx context.Context, targetUsername string, subscriberId string) error {
+	var target, subscriber types.User
+	var existingSubscription types.Subscription
+	//getting the targetusername
+	if err := ps.DB.WithContext(ctx).First(&target, "username = ?", targetUsername).Error; err != nil {
+		return fmt.Errorf("this username does not exists %w", err)
+	}
+	//getting subscribers id
+	if err := ps.DB.WithContext(ctx).First(&subscriber, subscriberId).Error; err != nil {
+		return fmt.Errorf("the subscriber does not exists %w", err)
+	}
+
+	//making sure target and subscriber does not exists
+	if err := ps.DB.WithContext(ctx).Where("subscriber_id = ? AND target_id = ?", subscriber.ID, target.ID).First(&existingSubscription).Error; err == nil {
+		return fmt.Errorf("subscription already exists")
+	}
+
+	subscribe := types.Subscription{
+		TargetID:     target.ID,
+		SubscriberID: subscriber.ID,
+	}
+
+	//creating subscriber
+	if err := ps.DB.WithContext(ctx).Create(&subscribe).Error; err != nil {
+		return fmt.Errorf("couldn't create this object %w", err)
+	}
+
+	return nil
 }

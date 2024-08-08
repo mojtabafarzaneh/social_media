@@ -11,6 +11,10 @@ type SubscriberResponse struct {
 	Email    string `json:"email"`
 }
 
+type SubscriptionResponse struct {
+	Username string `json:"username"`
+}
+
 func (u *User) SubcriberResponse() *SubscriberResponse {
 	return &SubscriberResponse{
 		Username: u.Username,
