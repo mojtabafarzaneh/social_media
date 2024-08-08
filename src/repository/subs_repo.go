@@ -12,6 +12,7 @@ import (
 type Subscription interface {
 	GetAllSubs(ctx context.Context, id string) ([]*types.User, error)
 	GetAllSubscribed(ctx context.Context, id uint) ([]*types.User, error)
+	CreateSubscription(ctx context.Context, targetUsername string, subscriberId string) error
 }
 
 type PostgresSubsRepo struct {
@@ -24,11 +25,12 @@ func NewPostgresSubsRepo() *PostgresSubsRepo {
 	}
 }
 
-func (ps *PostgresSubsRepo) GetAllSubs(ctx context.Context, id string) ([]*types.User, error) {
+func (ps *PostgresSubsRepo) GetAllSubscriptions(ctx context.Context, id string) ([]*types.User, error) {
 	var subs []*types.Subscription
 	var targetId []uint
 	var subcripted []*types.User
 
+	//searching for all the users that this user subsribed to.
 	if err := ps.DB.WithContext(ctx).Model(&subs).
 		Where("subscriber_id = ?", id).
 		Pluck("target_id", &targetId).Error; err != nil {
@@ -39,6 +41,7 @@ func (ps *PostgresSubsRepo) GetAllSubs(ctx context.Context, id string) ([]*types
 		return nil, nil
 	}
 
+	//retrieving useraname of the founded users.
 	if err := ps.DB.WithContext(ctx).Find(&subcripted, targetId).Error; err != nil {
 		return nil, err
 	}
@@ -72,8 +75,11 @@ func (ps *PostgresSubsRepo) GetAllSubscribed(ctx context.Context, id uint) ([]*t
 func (ps *PostgresSubsRepo) CreateSubscription(ctx context.Context, targetUsername string, subscriberId string) error {
 	var target, subscriber types.User
 	var existingSubscription types.Subscription
+
 	//getting the targetusername
-	if err := ps.DB.WithContext(ctx).First(&target, "username = ?", targetUsername).Error; err != nil {
+	if err := ps.DB.WithContext(ctx).
+		First(&target, "username = ?", targetUsername).
+		Error; err != nil {
 		return fmt.Errorf("this username does not exists %w", err)
 	}
 	//getting subscribers id
@@ -82,7 +88,10 @@ func (ps *PostgresSubsRepo) CreateSubscription(ctx context.Context, targetUserna
 	}
 
 	//making sure target and subscriber does not exists
-	if err := ps.DB.WithContext(ctx).Where("subscriber_id = ? AND target_id = ?", subscriber.ID, target.ID).First(&existingSubscription).Error; err == nil {
+	if err := ps.DB.WithContext(ctx).
+		Where("subscriber_id = ? AND target_id = ?", subscriber.ID, target.ID).
+		First(&existingSubscription).
+		Error; err == nil {
 		return fmt.Errorf("subscription already exists")
 	}
 
@@ -98,3 +107,5 @@ func (ps *PostgresSubsRepo) CreateSubscription(ctx context.Context, targetUserna
 
 	return nil
 }
+
+//TODO: Delete functionality!

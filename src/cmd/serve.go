@@ -28,7 +28,7 @@ func Serve() {
 	configs := config.Get()
 	db.ConnectToDB()
 	hc := handlers.NewUserControler()
-	//app.GET("/docs/*", echoSwagger.WrapHandler)
+	//app.GET("/docs/*",)
 
 	//users router
 	user := app.Group("/users")
@@ -50,9 +50,14 @@ func Serve() {
 	//subs router
 	subs := app.Group("/subs")
 	sc := handlers.NewSubsController()
-	subs.GET("/subscriptions/:id", sc.GetAllSubscriptions)
 	subs.GET("/subscribers/:id", sc.GetAllSubscribed)
+	subs.GET("/subscriptions/:id", sc.GetAllSubscriptions)
 	subs.POST("/:subscriber", sc.CreateSubs)
+
+	//profile router
+	profile := app.Group("/profile")
+	proc := handlers.NewProfileControler()
+	profile.GET("/:id", proc.GetUserProfileHandler)
 
 	app.Run(fmt.Sprintf("%s:%s", configs.Server.Host, configs.Server.Port))
 }
