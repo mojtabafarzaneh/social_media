@@ -66,3 +66,26 @@ func (sc *SubsController) GetAllSubscribed(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{fmt.Sprintf("all the subscribers of the user %v", id): response})
 	}
 }
+
+func (sc *SubsController) CreateSubs(c *gin.Context) {
+	var requestedUser types.SubscriptionResponse
+	if err := c.BindJSON(&requestedUser); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	id := c.Params.ByName("subscriber")
+
+	if len(requestedUser.Username) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "request is empty"})
+		return
+	}
+
+	err := sc.SubsRepository.CreateSubscription(c, requestedUser.Username, id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"details": "subscribed!"})
+}

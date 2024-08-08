@@ -52,6 +52,7 @@ func Serve() {
 	sc := handlers.NewSubsController()
 	subs.GET("/subscriptions/:id", sc.GetAllSubscriptions)
 	subs.GET("/subscribers/:id", sc.GetAllSubscribed)
+	subs.POST("/:subscriber", sc.CreateSubs)
 
 	app.Run(fmt.Sprintf("%s:%s", configs.Server.Host, configs.Server.Port))
 }
