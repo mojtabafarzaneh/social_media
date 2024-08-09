@@ -45,11 +45,13 @@ func (ar *AuthControler) RegiserHandler(c *gin.Context) {
 		return
 	}
 
-	token, err := utils.GenerateToken(24*time.Hour, params.Username)
+	token, err := utils.GenerateToken(24*time.Hour, *user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
 	}
+
+	//log.Print(token)
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message":  "successfuly registerd",
@@ -59,14 +61,14 @@ func (ar *AuthControler) RegiserHandler(c *gin.Context) {
 }
 
 func (ar *AuthControler) LoginHandler(c *gin.Context) {
-	var user types.User
+	var user *types.User
 
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
 		return
 	}
 
-	_, err := ar.repository.GetLogin(user.Username, user.Password)
+	user, err := ar.repository.GetLogin(user.Username, user.Password)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":  "username or password is incorrect",
@@ -75,7 +77,8 @@ func (ar *AuthControler) LoginHandler(c *gin.Context) {
 		return
 	}
 
-	genToken, err := utils.GenerateToken(24*time.Hour, user.Username)
+	log.Print("the user is", user)
+	genToken, err := utils.GenerateToken(24*time.Hour, *user)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":  "couldn't generate the token",
@@ -90,5 +93,35 @@ func (ar *AuthControler) LoginHandler(c *gin.Context) {
 		"message": "authenticated successfully",
 		"token":   genToken,
 	})
+
+}
+
+func (ac *AuthControler) GetAdminRegisterHandler(c *gin.Context) {
+	var user *types.User
+
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
+		return
+	}
+
+	user, err := ac.repository.GetAdminRegister(user.IsAdmin, user.Username, user.Password)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":  "username or password is incorrect",
+			"detail": err.Error(),
+		})
+		return
+	}
+
+	gentoken, err := utils.GenerateToken(24*time.Hour, *user)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":  "couldn't generate the token",
+			"detail": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gentoken)
 
 }

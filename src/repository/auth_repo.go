@@ -3,6 +3,7 @@ package repository
 import (
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/mojtabafarzaneh/social_media/src/db"
 	"github.com/mojtabafarzaneh/social_media/src/types"
@@ -36,11 +37,30 @@ func (ar *AuthPostgresRepo) GetRegister(user *types.User) error {
 func (ar *AuthPostgresRepo) GetLogin(username, password string) (*types.User, error) {
 	var user types.User
 
-	if err := ar.DB.Where("username = ?", username).First(&user).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := ar.DB.First(&user, "username = ?", username).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, fmt.Errorf("user not found %w", err)
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return nil, errors.New("incorrect password")
 	}
+
 	return &user, nil
+}
+
+func (ar *AuthPostgresRepo) GetAdminRegister(isAdmin bool, username, password string) (*types.User, error) {
+	var user types.User
+	if err := ar.DB.Model(&user).Where("username = ?", username).Update("is_admin", isAdmin).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, fmt.Errorf("user not found %w", err)
+	}
+
+	if err := ar.DB.First(&user, "username = ?", username).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, fmt.Errorf("user not found %w", err)
+	}
+	log.Print("the database user is", user)
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		return nil, errors.New("incorrect password")
+	}
+
+	return &user, nil
+
 }
