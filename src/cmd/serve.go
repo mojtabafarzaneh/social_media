@@ -34,7 +34,7 @@ func Serve() {
 	//users router
 	user := app.Group("/users")
 	user.Use(middleware.JWTAuthMiddleware())
-	user.GET("/", hc.ListUserHandler)
+	user.GET("/", middleware.IsUserAdminMiddleware(), hc.ListUserHandler)
 	user.GET("/:id", hc.GetUserHandler)
 	user.POST("/", hc.InsertUserHandler)
 	user.DELETE("/:id", hc.DeleteUserHandler)
@@ -70,6 +70,7 @@ func Serve() {
 	ac := handlers.NewAuthControler()
 	auth.POST("/register", ac.RegiserHandler)
 	auth.POST("/login", ac.LoginHandler)
+	auth.POST("/admin/register", ac.GetAdminRegisterHandler)
 
 	app.Run(fmt.Sprintf("%s:%s", configs.Server.Host, configs.Server.Port))
 }

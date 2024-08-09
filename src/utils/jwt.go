@@ -5,20 +5,22 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/mojtabafarzaneh/social_media/src/types"
 )
 
 var SecretKey = []byte("most_valuable_secret_of_mine")
 
-func GenerateToken(ttl time.Duration, payload interface{}) (string, error) {
+func GenerateToken(ttl time.Duration, user types.User) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 
 	now := time.Now().UTC()
 	claims := token.Claims.(jwt.MapClaims)
 
-	claims["sub"] = payload
+	claims["sub"] = user.ID
 	claims["exp"] = now.Add(ttl).Unix()
 	claims["iat"] = now.Unix()
 	claims["nbf"] = now.Unix()
+	claims["isAdmin"] = user.IsAdmin
 
 	tokenString, err := token.SignedString([]byte(SecretKey))
 
@@ -46,5 +48,5 @@ func ValidateToken(token string, signedJWTKey string) (interface{}, error) {
 		return nil, fmt.Errorf("invalid token claim")
 	}
 
-	return claims["sub"], nil
+	return claims, nil
 }
