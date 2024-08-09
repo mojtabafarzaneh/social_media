@@ -39,7 +39,6 @@ func (cl *UserControler) GetUserHandler(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "user not found!"})
 		return
 	}
-
 	response := types.UsersToUserResponses(user)
 
 	c.JSON(http.StatusOK, response)

@@ -7,6 +7,7 @@ import (
 	"github.com/mojtabafarzaneh/social_media/src/config"
 	"github.com/mojtabafarzaneh/social_media/src/db"
 	"github.com/mojtabafarzaneh/social_media/src/handlers"
+	"github.com/mojtabafarzaneh/social_media/src/middleware"
 	"github.com/spf13/cobra"
 )
 
@@ -32,6 +33,7 @@ func Serve() {
 
 	//users router
 	user := app.Group("/users")
+	user.Use(middleware.JWTAuthMiddleware())
 	user.GET("/", hc.ListUserHandler)
 	user.GET("/:id", hc.GetUserHandler)
 	user.POST("/", hc.InsertUserHandler)
@@ -41,6 +43,7 @@ func Serve() {
 	//posts router
 	post := app.Group("/posts")
 	pc := handlers.NewPostController()
+	post.Use(middleware.JWTAuthMiddleware())
 	post.GET("/", pc.ListPostsHandler)
 	post.GET("/:id", pc.GetPostHandler)
 	post.POST("/", pc.CreatePostHandler)
@@ -50,14 +53,23 @@ func Serve() {
 	//subs router
 	subs := app.Group("/subs")
 	sc := handlers.NewSubsController()
+	subs.Use(middleware.JWTAuthMiddleware())
+	subs.Use(middleware.JWTAuthMiddleware())
 	subs.GET("/subscribers/:id", sc.GetAllSubscribed)
 	subs.GET("/subscriptions/:id", sc.GetAllSubscriptions)
 	subs.POST("/:subscriber", sc.CreateSubs)
 
 	//profile router
 	profile := app.Group("/profile")
+	profile.Use(middleware.JWTAuthMiddleware())
 	proc := handlers.NewProfileControler()
 	profile.GET("/:id", proc.GetUserProfileHandler)
+
+	//auth router
+	auth := app.Group("/auth")
+	ac := handlers.NewAuthControler()
+	auth.POST("/register", ac.RegiserHandler)
+	auth.POST("/login", ac.LoginHandler)
 
 	app.Run(fmt.Sprintf("%s:%s", configs.Server.Host, configs.Server.Port))
 }

@@ -32,7 +32,8 @@ func (pr *PostgresProfileRepo) GetUserProfile(ctx context.Context, id uint) (*ty
 		return nil, err
 	}
 
-	if err := pr.DB.WithContext(ctx).Where("user_id = ?", id).First(&profile).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := pr.DB.WithContext(ctx).Where("user_id = ?", id).
+		First(&profile).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 		profile = types.Profile{
 			UserId:            id,
 			SubscriberCount:   uint(targetCount),
@@ -45,11 +46,14 @@ func (pr *PostgresProfileRepo) GetUserProfile(ctx context.Context, id uint) (*ty
 	}
 
 	switch {
-	case profile.SubscriberCount != uint(targetCount) || profile.SubscriptionCount != uint(subscriberCount):
+	case profile.SubscriberCount != uint(targetCount) ||
+		profile.SubscriptionCount != uint(subscriberCount):
+
 		profile.SubscriberCount = uint(targetCount)
 		profile.SubscriptionCount = uint(subscriberCount)
 
-		if err := pr.DB.WithContext(ctx).Where("user_id = ?", id).Save(&profile).Error; err != nil {
+		if err := pr.DB.WithContext(ctx).Where("user_id = ?", id).
+			Save(&profile).Error; err != nil {
 			return nil, fmt.Errorf("couldn't update profile of the user: %w", err)
 		}
 	default:
@@ -63,15 +67,22 @@ func (pr *PostgresProfileRepo) GetSubsriptionsCount(ctx context.Context, id uint
 	var subscriberCount int64
 	var targetCount int64
 
-	if err := pr.DB.WithContext(ctx).Find(&types.User{}, id).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := pr.DB.WithContext(ctx).Find(&types.User{}, id).
+		Error; errors.Is(err, gorm.ErrRecordNotFound) {
 		return 0, 0, fmt.Errorf("user doesn't exists %w", err)
 	}
 
-	if err := pr.DB.WithContext(ctx).Model(&types.Subscription{}).Where("subscriber_id = ?", id).Count(&subscriberCount).Error; err != nil {
+	if err := pr.DB.WithContext(ctx).
+		Model(&types.Subscription{}).
+		Where("subscriber_id = ?", id).
+		Count(&subscriberCount).Error; err != nil {
 		return 0, 0, err
 	}
 
-	if err := pr.DB.WithContext(ctx).Model(&types.Subscription{}).Where("target_id = ?", id).Count(&targetCount).Error; err != nil {
+	if err := pr.DB.WithContext(ctx).
+		Model(&types.Subscription{}).
+		Where("target_id = ?", id).
+		Count(&targetCount).Error; err != nil {
 		return 0, 0, err
 	}
 
