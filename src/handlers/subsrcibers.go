@@ -21,9 +21,31 @@ func NewSubsController() *SubsController {
 }
 
 func (sc *SubsController) GetAllSubscriptions(c *gin.Context) {
-	id := c.Params.ByName("id")
 
-	subs, err := sc.SubsRepository.GetAllSubscriptions(c, id)
+	username, ok := c.GetQuery("username")
+
+	if !ok {
+		id := c.Params.ByName("id")
+
+		subs, err := sc.SubsRepository.GetAllSubscriptions(c, id)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error":   "user not found",
+				"details": err.Error(),
+			})
+		}
+
+		if len(subs) == 0 {
+			c.JSON(http.StatusOK, gin.H{"details": "this user has not subscribe to any user"})
+
+		} else {
+			res := types.UserToSubscriberResponse(subs)
+
+			c.JSON(http.StatusOK, gin.H{fmt.Sprintf("all the subscriptions of the user %v", id): res})
+		}
+	}
+	query, err := sc.SubsRepository.FindUsernames(c, username)
+
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error":   "user not found",
@@ -31,15 +53,8 @@ func (sc *SubsController) GetAllSubscriptions(c *gin.Context) {
 		})
 	}
 
-	if len(subs) == 0 {
-		c.JSON(http.StatusOK, gin.H{"details": "this user has not subscribe to any user"})
-
-	} else {
-		res := types.UserToSubscriberResponse(subs)
-
-		c.JSON(http.StatusOK, gin.H{fmt.Sprintf("all the subscriptions of the user %v", id): res})
-	}
-
+	response := types.UserToSubscriberResponse(query)
+	c.JSON(http.StatusOK, response)
 }
 
 func (sc *SubsController) GetAllSubscribed(c *gin.Context) {

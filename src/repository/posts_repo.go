@@ -78,3 +78,16 @@ func (pr *PostgresPostRepo) GetPost(ctx context.Context, id string) ([]*types.Po
 
 	return posts, nil
 }
+
+func (pr *PostgresPostRepo) FindPost(ctx context.Context, content string) ([]*types.Post, error) {
+	var posts []*types.Post
+
+	if err := pr.DB.WithContext(ctx).Model(&posts).
+		Where("content LIKE ?", "%"+content+"%").
+		Find(&posts).
+		Error; errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	return posts, nil
+}
