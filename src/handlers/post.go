@@ -42,16 +42,27 @@ func (pc *PostController) CreatePostHandler(c *gin.Context) {
 }
 
 func (pc *PostController) ListPostsHandler(c *gin.Context) {
+	content, ok := c.GetQuery("content")
+	if !ok {
+		response, err := pc.PostRepository.GetAllPosts(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error":   "Bad Request",
+				"details": err.Error(),
+			})
+		}
 
-	response, err := pc.PostRepository.GetAllPosts(c)
+		c.JSON(http.StatusOK, response)
+	}
+
+	query, err := pc.PostRepository.FindPost(c, content)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Bad Request",
 			"details": err.Error(),
 		})
 	}
-
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, query)
 
 }
 
@@ -80,7 +91,8 @@ func (pc *PostController) UpdatePostsHandler(c *gin.Context) {
 			"detail": err.Error(),
 		})
 	}
-	c.JSON(http.StatusOK, response)
+
+	c.JSON(http.StatusOK, &response)
 }
 
 func (pc *PostController) DeletePostHandler(c *gin.Context) {

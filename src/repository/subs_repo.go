@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/mojtabafarzaneh/social_media/src/db"
@@ -106,6 +107,18 @@ func (ps *PostgresSubsRepo) CreateSubscription(ctx context.Context, targetUserna
 	}
 
 	return nil
+}
+
+func (ps *PostgresSubsRepo) FindUsernames(ctx context.Context, useraname string) ([]*types.User, error) {
+	var user []*types.User
+
+	if err := ps.DB.Model(&user).
+		Where("username LIKE ?", "%"+useraname+"%").
+		Find(&user).
+		Error; errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+	return user, nil
 }
 
 //TODO: Delete functionality!
