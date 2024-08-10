@@ -19,6 +19,18 @@ func NewPostController() *PostController {
 	}
 }
 
+// @security BearerAuth
+// @Summary Create a new post
+// @Description Create a new post. Only accessible by authorized users with a valid JWT token.
+// @Tags posts
+// @Accept json
+// @Produce json
+// @Param user path string true "User ID"
+// @Param body body types.Post true "Post details"
+// @Success 201 {object} types.Post "Post created successfully"
+// @Failure 400 {object} map[string]interface{} "Invalid input or error creating post"
+// @Failure 401 {object} map[string]interface{} "Unauthorized access"
+// @Router /posts/{user} [post]
 func (pc *PostController) CreatePostHandler(c *gin.Context) {
 	var posts types.Post
 	if err := c.BindJSON(&posts); err != nil {
@@ -66,6 +78,16 @@ func (pc *PostController) ListPostsHandler(c *gin.Context) {
 
 }
 
+// ListPostsHandler handles the retrieval of posts, optionally filtering by content
+// @Summary Retrieve all posts or filter by content
+// @Description Retrieves a list of posts. Optionally, you can filter posts by providing a 'content' query parameter.
+// @Tags posts
+// @Accept json
+// @Produce json
+// @Param content query string false "Filter posts by content"
+// @Success 200 {array} types.Post "List of posts"
+// @Failure 400 {object} map[string]interface{} "Invalid request or error retrieving posts"
+// @Router /posts [get]
 func (pc *PostController) UpdatePostsHandler(c *gin.Context) {
 	var updatContent types.Post
 
@@ -95,6 +117,20 @@ func (pc *PostController) UpdatePostsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &response)
 }
 
+// DeletePostHandler handles the deletion of a specific post by its ID
+// @Summary Delete a specific post
+// @Description Delete a post by its ID. Only accessible by authorized users with a valid JWT token.
+// @Tags posts
+// @Accept json
+// @Produce json
+// @Param user path string true "User ID"
+// @Param id path string true "Post ID"
+// @Success 204 {object} map[string]interface{} "Post deleted successfully"
+// @Failure 400 {object} map[string]interface{} "Bad Request"
+// @Failure 401 {object} map[string]interface{} "Unauthorized"
+// @Failure 404 {object} map[string]interface{} "Not Found"
+// @Router /posts/{user}/{id} [delete]
+// @Security BearerAuth
 func (pc *PostController) DeletePostHandler(c *gin.Context) {
 
 	id := c.Params.ByName("id")
@@ -115,10 +151,23 @@ func (pc *PostController) DeletePostHandler(c *gin.Context) {
 		})
 	}
 
-	c.JSON(http.StatusNoContent, gin.H{})
+	c.JSON(http.StatusNoContent, gin.H{"message": "success"})
 
 }
 
+// GetPostHandler retrieves a specific post by its ID
+// @Summary Get a specific post by ID
+// @Description Retrieve a post by its ID. Only accessible by authorized users with a valid JWT token.
+// @Tags posts
+// @Accept json
+// @Produce json
+// @Param id path string true "Post ID"
+// @Success 200 {object} types.Post "Post retrieved successfully"
+// @Failure 400 {object} map[string]interface{} "Bad Request"
+// @Failure 401 {object} map[string]interface{} "Unauthorized"
+// @Failure 404 {object} map[string]interface{} "Not Found"
+// @Router /posts/{id} [get]
+// @Security BearerAuth
 func (pc *PostController) GetPostHandler(c *gin.Context) {
 	id := c.Params.ByName("id")
 

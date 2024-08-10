@@ -9,6 +9,10 @@ import (
 	"github.com/mojtabafarzaneh/social_media/src/handlers"
 	"github.com/mojtabafarzaneh/social_media/src/middleware"
 	"github.com/spf13/cobra"
+
+	_ "github.com/mojtabafarzaneh/social_media/docs"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func init() {
@@ -30,16 +34,17 @@ func Serve() {
 	mc := middleware.NewControler()
 	db.ConnectToDB()
 	hc := handlers.NewUserControler()
-	//app.GET("/docs/*",)
+
+	app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	//users router
 	user := app.Group("/users")
 	user.Use(middleware.JWTAuthMiddleware())
 	user.GET("/", middleware.IsUserAdminMiddleware(), hc.ListUserHandler)
 	user.GET("/:id", hc.GetUserHandler)
-	user.POST("/", hc.InsertUserHandler)
-	user.DELETE("/:id", hc.DeleteUserHandler)
-	user.PUT("/:id/username", hc.UpdateUsernameHandler)
+	user.POST("/", middleware.IsUserAdminMiddleware(), hc.InsertUserHandler)
+	user.DELETE("/:id", middleware.IsUserAdminMiddleware(), hc.DeleteUserHandler)
+	user.PUT("/:id/username", middleware.IsUserAdminMiddleware(), hc.UpdateUsernameHandler)
 
 	//posts router
 	post := app.Group("/posts")

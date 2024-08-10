@@ -42,6 +42,15 @@ type ResponseUser struct {
 	Post      []Post    `json:"posts"`
 }
 
+type LoginUser struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+type AdminRegisterParams struct {
+	IsAdmin  bool   `json:"is_admin"`
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
 type UpdateUsernameParams struct {
 	Username string `json:"username"`
 }

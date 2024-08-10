@@ -19,6 +19,15 @@ func NewUserControler() *UserControler {
 	}
 }
 
+// @Summary List all users
+// @Description Retrieves a list of all users. Accessible only by admin users.
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Success 200 {array} types.ResponseUser "List of users"
+// @Failure 400 {object} map[string]string "Bad request error"
+// @Security BearerAuth
+// @Router /users [get]
 func (cl *UserControler) ListUserHandler(c *gin.Context) {
 
 	user, err := cl.UserRepository.ListUser(c)
@@ -30,6 +39,17 @@ func (cl *UserControler) ListUserHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// @Summary Get a specific user
+// @Description Retrieves details of a specific user by ID. Accessible only by admin users.
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 200 {object} types.ResponseUser "User details"
+// @Failure 404 {object} map[string]string "User not found error"
+// @Failure 401 {object} map[string]string "Unauthorized error"
+// @Security BearerAuth
+// @Router /users/{id} [get]
 func (cl *UserControler) GetUserHandler(c *gin.Context) {
 
 	var id = c.Params.ByName("id")
@@ -45,6 +65,17 @@ func (cl *UserControler) GetUserHandler(c *gin.Context) {
 
 }
 
+// @Summary Create a new user
+// @Description Creates a new user. Accessible only by admin users.
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param user body types.CreateUserParams true "User data"
+// @Success 200 {object} types.ResponseUser "Created user details"
+// @Failure 400 {object} map[string]string "Bad request error"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Security BearerAuth
+// @Router /users [post]
 func (cl *UserControler) InsertUserHandler(c *gin.Context) {
 	var params types.CreateUserParams
 
@@ -76,6 +107,16 @@ func (cl *UserControler) InsertUserHandler(c *gin.Context) {
 
 }
 
+// @Summary Delete a user
+// @Description Deletes a user by ID. Accessible only by admin users.
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 204 "User deleted successfully"
+// @Failure 404 {object} map[string]string "User not found or failed to delete"
+// @Security BearerAuth
+// @Router /users/{id} [delete]
 func (cl *UserControler) DeleteUserHandler(c *gin.Context) {
 
 	var id = c.Params.ByName("id")
@@ -99,6 +140,18 @@ func (cl *UserControler) DeleteUserHandler(c *gin.Context) {
 	}
 }
 
+// @Summary Update a user's username
+// @Description Updates the username of a user by ID. Accessible only by admin users.
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Param username body types.UpdateUsernameParams true "New username"
+// @Success 202 {object} map[string]string "Username updated successfully"
+// @Failure 400 {object} map[string]string "Invalid request or bad user ID"
+// @Failure 500 {object} map[string]string "Failed to update username"
+// @Security BearerAuth
+// @Router /users/{id}/username [put]
 func (cl *UserControler) UpdateUsernameHandler(c *gin.Context) {
 	var params types.UpdateUsernameParams
 
