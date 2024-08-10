@@ -27,6 +27,7 @@ func Serve() {
 	app := gin.Default()
 	config.Set()
 	configs := config.Get()
+	mc := middleware.NewControler()
 	db.ConnectToDB()
 	hc := handlers.NewUserControler()
 	//app.GET("/docs/*",)
@@ -46,9 +47,9 @@ func Serve() {
 	post.Use(middleware.JWTAuthMiddleware())
 	post.GET("/", pc.ListPostsHandler)
 	post.GET("/:id", pc.GetPostHandler)
-	post.POST("/", pc.CreatePostHandler)
-	post.PUT("/:id", pc.UpdatePostsHandler)
-	post.DELETE("/:id", pc.DeletePostHandler)
+	post.POST("/:user", mc.IsUserAuthorized(), pc.CreatePostHandler)
+	post.PUT("/:user/:id", mc.IsUserAuthorized(), pc.UpdatePostsHandler)
+	post.DELETE("/:user/:id", mc.IsUserAuthorized(), pc.DeletePostHandler)
 
 	//subs router
 	subs := app.Group("/subs")

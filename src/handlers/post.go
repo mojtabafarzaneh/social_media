@@ -80,7 +80,8 @@ func (pc *PostController) UpdatePostsHandler(c *gin.Context) {
 			"detail": err.Error(),
 		})
 	}
-	c.JSON(http.StatusOK, response)
+
+	c.JSON(http.StatusOK, &response)
 }
 
 func (pc *PostController) DeletePostHandler(c *gin.Context) {

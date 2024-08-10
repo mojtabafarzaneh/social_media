@@ -51,8 +51,6 @@ func (ar *AuthControler) RegiserHandler(c *gin.Context) {
 		return
 	}
 
-	//log.Print(token)
-
 	c.JSON(http.StatusCreated, gin.H{
 		"message":  "successfuly registerd",
 		"token":    token,
