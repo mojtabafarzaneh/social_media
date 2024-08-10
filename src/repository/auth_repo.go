@@ -21,17 +21,23 @@ func NewAuthPostgresRepo() *AuthPostgresRepo {
 	}
 }
 
-func (ar *AuthPostgresRepo) GetRegister(user *types.User) error {
+func (ar *AuthPostgresRepo) GetRegister(user *types.User) (*types.User, error) {
 	var existingUser types.User
-	var users = []*types.User{{Username: user.Username, Email: user.Email, Password: user.Password}}
 
 	err := ar.DB.Where("username = ?", user.Username).
 		Or("email = ?", user.Email).First(&existingUser).Error
 	if err == nil {
-		return fmt.Errorf("user already exists %w", err)
+		return nil, fmt.Errorf("user already exists %w", err)
 	}
 
-	return ar.DB.Create(&users).Error
+	if err != gorm.ErrRecordNotFound {
+		return nil, fmt.Errorf("error checking for existing user: %w", err)
+	}
+
+	if err := ar.DB.Create(user).Error; err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
 func (ar *AuthPostgresRepo) GetLogin(username, password string) (*types.User, error) {
@@ -47,9 +53,9 @@ func (ar *AuthPostgresRepo) GetLogin(username, password string) (*types.User, er
 	return &user, nil
 }
 
-func (ar *AuthPostgresRepo) GetAdminRegister(isAdmin bool, username, password string) (*types.User, error) {
+func (ar *AuthPostgresRepo) GetAdminRegister(username, password string) (*types.User, error) {
 	var user types.User
-	if err := ar.DB.Model(&user).Where("username = ?", username).Update("is_admin", isAdmin).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := ar.DB.Model(&user).Where("username = ?", username).Update("is_admin", true).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, fmt.Errorf("user not found %w", err)
 	}
 

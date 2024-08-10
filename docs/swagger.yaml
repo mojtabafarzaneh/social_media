@@ -1,8 +1,640 @@
+basePath: /
+definitions:
+  types.AdminRegisterParams:
+    properties:
+      is_admin:
+        type: boolean
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  types.CreateUserParams:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  types.LoginUser:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  types.Post:
+    properties:
+      Id:
+        type: integer
+      author:
+        type: integer
+      content:
+        type: string
+      created_at:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  types.ResponseUser:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      posts:
+        items:
+          $ref: '#/definitions/types.Post'
+        type: array
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+  types.SubscriptionResponse:
+    properties:
+      username:
+        type: string
+    type: object
+  types.UpdateUsernameParams:
+    properties:
+      username:
+        type: string
+    type: object
+host: 172.24.78.105:3000
 info:
   contact: {}
-  description: This is a sample server Petstore server.
-  termsOfService: http://swagger.io/terms/
-  title: Swagger Example API
+  description: This is a sample server for a social media application.
+  title: Social Media API
   version: "1.0"
-paths: {}
+paths:
+  /auth/admin/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new admin user and return an authentication token
+      parameters:
+      - description: Admin registration details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/types.AdminRegisterParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token generated successfully
+          schema:
+            type: string
+        "400":
+          description: Invalid input or couldn't generate token
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Register a new admin user
+      tags:
+      - auth
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate a user and return an authentication token
+      parameters:
+      - description: User login details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/types.LoginUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: authenticated successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid username or password
+          schema:
+            additionalProperties: true
+            type: object
+      summary: User login
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user and return an authentication token
+      parameters:
+      - description: User registration details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/types.CreateUserParams'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: successfuly registered
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Validation failed or bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Register a new user
+      tags:
+      - auth
+  /posts:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of posts. Optionally, you can filter posts by
+        providing a 'content' query parameter.
+      parameters:
+      - description: Filter posts by content
+        in: query
+        name: content
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of posts
+          schema:
+            items:
+              $ref: '#/definitions/types.Post'
+            type: array
+        "400":
+          description: Invalid request or error retrieving posts
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Retrieve all posts or filter by content
+      tags:
+      - posts
+  /posts/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a post by its ID. Only accessible by authorized users
+        with a valid JWT token.
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Post retrieved successfully
+          schema:
+            $ref: '#/definitions/types.Post'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get a specific post by ID
+      tags:
+      - posts
+  /posts/{user}:
+    post:
+      consumes:
+      - application/json
+      description: Create a new post. Only accessible by authorized users with a valid
+        JWT token.
+      parameters:
+      - description: User ID
+        in: path
+        name: user
+        required: true
+        type: string
+      - description: Post details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/types.Post'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Post created successfully
+          schema:
+            $ref: '#/definitions/types.Post'
+        "400":
+          description: Invalid input or error creating post
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized access
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new post
+      tags:
+      - posts
+  /posts/{user}/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a post by its ID. Only accessible by authorized users with
+        a valid JWT token.
+      parameters:
+      - description: User ID
+        in: path
+        name: user
+        required: true
+        type: string
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Post deleted successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a specific post
+      tags:
+      - posts
+  /profile/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the profile information for a specific user by ID.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User profile retrieved successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "406":
+          description: Not Acceptable
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get user profile
+      tags:
+      - profile
+  /subs/{subscriber}:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new subscription for a user. Accessible to authenticated
+        users.
+      parameters:
+      - description: Subscriber ID
+        in: path
+        name: subscriber
+        required: true
+        type: string
+      - description: Subscription data
+        in: body
+        name: subscription
+        required: true
+        schema:
+          $ref: '#/definitions/types.SubscriptionResponse'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Subscription created successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad request error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new subscription
+      tags:
+      - Subscriptions
+  /subs/subscribers/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all users subscribed to a specific user by ID. Accessible
+        to authenticated users.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of subscribers
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid user ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: User not found error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all users subscribed to a user
+      tags:
+      - Subscriptions
+  /subs/subscriptions/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all subscriptions for a user by ID or username. Accessible
+        to authenticated users.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        type: string
+      - description: Username
+        in: query
+        name: username
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of subscriptions
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: User not found error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all subscriptions of a user
+      tags:
+      - Subscriptions
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of all users. Accessible only by admin users.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of users
+          schema:
+            items:
+              $ref: '#/definitions/types.ResponseUser'
+            type: array
+        "400":
+          description: Bad request error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List all users
+      tags:
+      - Users
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user. Accessible only by admin users.
+      parameters:
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/types.CreateUserParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Created user details
+          schema:
+            $ref: '#/definitions/types.ResponseUser'
+        "400":
+          description: Bad request error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new user
+      tags:
+      - Users
+  /users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a user by ID. Accessible only by admin users.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: User deleted successfully
+        "404":
+          description: User not found or failed to delete
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a user
+      tags:
+      - Users
+    get:
+      consumes:
+      - application/json
+      description: Retrieves details of a specific user by ID. Accessible only by
+        admin users.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User details
+          schema:
+            $ref: '#/definitions/types.ResponseUser'
+        "401":
+          description: Unauthorized error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: User not found error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get a specific user
+      tags:
+      - Users
+  /users/{id}/username:
+    put:
+      consumes:
+      - application/json
+      description: Updates the username of a user by ID. Accessible only by admin
+        users.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: New username
+        in: body
+        name: username
+        required: true
+        schema:
+          $ref: '#/definitions/types.UpdateUsernameParams'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Username updated successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request or bad user ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Failed to update username
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a user's username
+      tags:
+      - Users
+schemes:
+- http
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
