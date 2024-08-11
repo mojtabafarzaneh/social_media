@@ -40,7 +40,7 @@ func Serve() {
 	//users router
 	user := app.Group("/users")
 	user.Use(middleware.JWTAuthMiddleware())
-	user.GET("/", middleware.IsUserAdminMiddleware(), hc.ListUserHandler)
+	user.GET("/list", middleware.IsUserAdminMiddleware(), hc.ListUserHandler)
 	user.GET("/:id", hc.GetUserHandler)
 	user.POST("/", middleware.IsUserAdminMiddleware(), hc.InsertUserHandler)
 	user.DELETE("/:id", middleware.IsUserAdminMiddleware(), hc.DeleteUserHandler)

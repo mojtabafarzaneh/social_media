@@ -29,36 +29,39 @@ func NewAuthControler() *AuthControler {
 // @Produce json
 // @Param body body types.CreateUserParams true "User registration details"
 // @Success 201 {object} map[string]interface{} "successfuly registered"
-// @Failure 400 {object} map[string]interface{} "Validation failed or bad request"
-// @Failure 500 {object} map[string]interface{} "Internal server error"
+// @Failure 400 {object} ErrorResponse "Validation failed or bad request"
+// @Failure 409 {object} ErrorResponse "Conflict whit the current state"
+// @Failure 422 {object} ErrorResponse "Provided with invalid data"
+// @Failure 500 {object} ErrorResponse "Internal server error"
 // @Router /auth/register [post]
 func (ar *AuthControler) RegiserHandler(c *gin.Context) {
 	var params types.CreateUserParams
 
 	if err := c.ShouldBindJSON(&params); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ErrBadRequest(c, err.Error())
 		return
 	}
 
-	if validationErrors := params.Validate(); len(validationErrors) > 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "validation failed", "details": validationErrors})
+	validationErrors := params.Validate()
+	if len(validationErrors) > 0 {
+		ErrValidationFailed(c, validationErrors)
 		return
 	}
 
 	user, err := types.NewUserFromParams(params)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "validation failed"})
+		ErrBadRequest(c, err.Error())
 		return
 	}
 
 	if user, err = ar.repository.GetRegister(user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ErrDatabaseFailed(c, err.Error())
 		return
 	}
 
 	token, err := utils.GenerateToken(24*time.Hour, *user)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		ErrFailedGeneratingToken(c, err.Error())
 		return
 	}
 
@@ -77,14 +80,16 @@ func (ar *AuthControler) RegiserHandler(c *gin.Context) {
 // @Produce json
 // @Param body body types.LoginUser true "User login details"
 // @Success 200 {object} map[string]interface{} "authenticated successfully"
-// @Failure 400 {object} map[string]interface{} "Invalid username or password"
+// @Failure 400 {object} ErrorResponse "Provided with incorrect data"
+// @Failure 401 {object} ErrorResponse "username or password is incorrect"
+// @Failure 500 {object} ErrorResponse "internal server error"
 // @Router /auth/login [post]
 func (ar *AuthControler) LoginHandler(c *gin.Context) {
 
 	var params types.LoginUser
 
 	if err := c.ShouldBindJSON(&params); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
+		ErrBadRequest(c, err.Error())
 		return
 	}
 
@@ -95,20 +100,13 @@ func (ar *AuthControler) LoginHandler(c *gin.Context) {
 
 	user, err := ar.repository.GetLogin(user.Username, user.Password)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":  "username or password is incorrect",
-			"detail": err.Error(),
-		})
+		ErrNotAuthenticated(c, err.Error())
 		return
 	}
 
-	log.Print("the user is", user)
 	genToken, err := utils.GenerateToken(24*time.Hour, *user)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":  "couldn't generate the token",
-			"detail": err.Error(),
-		})
+		ErrFailedGeneratingToken(c, err.Error())
 		return
 	}
 
@@ -129,13 +127,15 @@ func (ar *AuthControler) LoginHandler(c *gin.Context) {
 // @Produce json
 // @Param body body types.AdminRegisterParams true "Admin registration details"
 // @Success 200 {string} string "Token generated successfully"
-// @Failure 400 {object} map[string]interface{} "Invalid input or couldn't generate token"
+// @Success 401 {object} ErrorResponse "Failed to Authenticate"
+// @Failure 400 {object} ErrorResponse "Provided with incorrect data"
+// @Failure 500 {object} ErrorResponse "internal server error"
 // @Router /auth/admin/register [post]
 func (ac *AuthControler) GetAdminRegisterHandler(c *gin.Context) {
 	var params *types.AdminRegisterParams
 
 	if err := c.ShouldBindJSON(&params); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
+		ErrBadRequest(c, err.Error())
 		return
 	}
 
@@ -146,19 +146,13 @@ func (ac *AuthControler) GetAdminRegisterHandler(c *gin.Context) {
 
 	user, err := ac.repository.GetAdminRegister(user.Username, user.Password)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":  "username or password is incorrect",
-			"detail": err.Error(),
-		})
+		ErrNotAuthenticated(c, err.Error())
 		return
 	}
 
 	gentoken, err := utils.GenerateToken(24*time.Hour, *user)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":  "couldn't generate the token",
-			"detail": err.Error(),
-		})
+		ErrFailedGeneratingToken(c, err.Error())
 		return
 	}
 

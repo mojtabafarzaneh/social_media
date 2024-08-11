@@ -28,8 +28,7 @@ func NewSubsController() *SubsController {
 // @Param id path string optional "User ID"
 // @Param username query string optional "Username"
 // @Success 200 {object} map[string]interface{} "List of subscriptions"
-// @Failure 400 {object} map[string]string "Bad request error"
-// @Failure 404 {object} map[string]string "User not found error"
+// @Failure 404 {object} ErrorResponse "User not found error"
 // @Security BearerAuth
 // @Router /subs/subscriptions/{id} [get]
 func (sc *SubsController) GetAllSubscriptions(c *gin.Context) {
@@ -41,19 +40,17 @@ func (sc *SubsController) GetAllSubscriptions(c *gin.Context) {
 
 		subs, err := sc.SubsRepository.GetAllSubscriptions(c, id)
 		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{
-				"error":   "user not found",
-				"details": err.Error(),
-			})
+			ErrRecordNotFound(c, err.Error())
+			return
 		}
 
 		if len(subs) == 0 {
-			c.JSON(http.StatusOK, map[string]string{"details": "this user has not subscribed to any user"})
+			c.JSON(http.StatusOK, gin.H{"details": "this user has not subscribed to any user"})
 			return
 		}
 
 		res := types.UserToSubscriberResponse(subs)
-		c.JSON(http.StatusOK, map[string]interface{}{
+		c.JSON(http.StatusOK, gin.H{
 			fmt.Sprintf("all the subscriptions of the user %v", id): res,
 		})
 		return
@@ -61,10 +58,8 @@ func (sc *SubsController) GetAllSubscriptions(c *gin.Context) {
 	query, err := sc.SubsRepository.FindUsernames(c, username)
 
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error":   "user not found",
-			"details": err.Error(),
-		})
+		ErrRecordNotFound(c, err.Error())
+		return
 	}
 
 	response := types.UserToSubscriberResponse(query)
@@ -78,32 +73,31 @@ func (sc *SubsController) GetAllSubscriptions(c *gin.Context) {
 // @Produce json
 // @Param id path string true "User ID"
 // @Success 200 {object} map[string]interface{} "List of subscribers"
-// @Failure 400 {object} map[string]string "Invalid user ID"
-// @Failure 404 {object} map[string]string "User not found error"
+// @Failure 400 {object} ErrorResponse "Invalid user ID"
+// @Failure 404 {object} ErrorResponse "User not found error"
 // @Security BearerAuth
 // @Router /subs/subscribers/{id} [get]
 func (sc *SubsController) GetAllSubscribed(c *gin.Context) {
 	id, err := strconv.Atoi(c.Params.ByName("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		ErrBadRequest(c, err.Error())
 		return
 	}
 
 	subscriber, err := sc.SubsRepository.GetAllSubscribed(c, uint(id))
 
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error":   "user not found",
-			"details": err.Error(),
-		})
+		ErrRecordNotFound(c, err.Error())
+		return
 	}
 
 	if len(subscriber) == 0 {
 		c.JSON(http.StatusOK, gin.H{"details": "there are no records of any subscriber for this user"})
+		return
 	} else {
 		response := types.UserToSubscriberResponse(subscriber)
-
 		c.JSON(http.StatusOK, gin.H{fmt.Sprintf("all the subscribers of the user %v", id): response})
+		return
 	}
 }
 
@@ -114,27 +108,28 @@ func (sc *SubsController) GetAllSubscribed(c *gin.Context) {
 // @Produce json
 // @Param subscriber path string true "Subscriber ID"
 // @Param subscription body types.SubscriptionResponse true "Subscription data"
-// @Success 201 {object} map[string]string "Subscription created successfully"
-// @Failure 400 {object} map[string]string "Bad request error"
+// @Success 201 {object} ErrorResponse "Subscription created successfully"
+// @Failure 400 {object} ErrorResponse "Bad request error"
+// @Failure 404 {object} ErrorResponse "Record not found"
 // @Security BearerAuth
 // @Router /subs/{subscriber} [post]
 func (sc *SubsController) CreateSubs(c *gin.Context) {
 	var requestedUser types.SubscriptionResponse
 	if err := c.BindJSON(&requestedUser); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ErrBadRequest(c, err.Error())
 		return
 	}
 
 	id := c.Params.ByName("subscriber")
 
 	if len(requestedUser.Username) == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "request is empty"})
+		ErrBadRequest(c, "should provid the username")
 		return
 	}
 
 	err := sc.SubsRepository.CreateSubscription(c, requestedUser.Username, id)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ErrRecordNotFound(c, err.Error())
 		return
 	}
 

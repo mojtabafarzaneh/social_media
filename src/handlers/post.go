@@ -28,40 +28,46 @@ func NewPostController() *PostController {
 // @Param user path string true "User ID"
 // @Param body body types.Post true "Post details"
 // @Success 201 {object} types.Post "Post created successfully"
-// @Failure 400 {object} map[string]interface{} "Invalid input or error creating post"
-// @Failure 401 {object} map[string]interface{} "Unauthorized access"
+// @Failure 400 {object} ErrorResponse "Invalid input or error creating post"
+// @Failure 404 {object} ErrorResponse "Record not found"
 // @Router /posts/{user} [post]
 func (pc *PostController) CreatePostHandler(c *gin.Context) {
 	var posts types.Post
-	if err := c.BindJSON(&posts); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error":   "user not found",
-			"details": err.Error(),
-		})
+	if err := c.ShouldBindJSON(&posts); err != nil {
+		ErrBadRequest(c, err.Error())
+		return
 	}
 
 	res, err := pc.PostRepository.InsertPost(c, posts)
 
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error":   "user not found",
-			"details": err.Error(),
-		})
+		ErrRecordNotFound(c, err.Error())
+		return
 	}
 
 	c.JSON(http.StatusCreated, res)
 
 }
 
+// ListPostsHandler handles the retrieval of posts, optionally filtering by content
+// @Summary Retrieve all posts or filter by content
+// @Description Retrieves a list of posts. Optionally, you can filter posts by providing a 'content' query parameter.
+// @security BearerAuth
+// @Tags posts
+// @Accept json
+// @Produce json
+// @Param content query string false "Filter posts by content"
+// @Success 200 {array} types.Post "List of posts"
+// @Failure 400 {object} ErrorResponse "Invalid request or error retrieving posts"
+// @Failure 404 {object} ErrorResponse "Record not fount"
+// @Router /posts [get]
 func (pc *PostController) ListPostsHandler(c *gin.Context) {
 	content, ok := c.GetQuery("content")
 	if !ok {
 		response, err := pc.PostRepository.GetAllPosts(c)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error":   "Bad Request",
-				"details": err.Error(),
-			})
+			ErrBadRequest(c, err.Error())
+			return
 		}
 
 		c.JSON(http.StatusOK, response)
@@ -69,49 +75,42 @@ func (pc *PostController) ListPostsHandler(c *gin.Context) {
 
 	query, err := pc.PostRepository.FindPost(c, content)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":   "Bad Request",
-			"details": err.Error(),
-		})
+		ErrRecordNotFound(c, err.Error())
+		return
 	}
 	c.JSON(http.StatusOK, query)
 
 }
 
-// ListPostsHandler handles the retrieval of posts, optionally filtering by content
-// @Summary Retrieve all posts or filter by content
-// @Description Retrieves a list of posts. Optionally, you can filter posts by providing a 'content' query parameter.
+// UpdatePostHandler handles updating of a post
+// @Summary update posts by admins and user that created it
+// @Description update posts content by the user or the admins
+// @security BearerAuth
 // @Tags posts
 // @Accept json
 // @Produce json
-// @Param content query string false "Filter posts by content"
 // @Success 200 {array} types.Post "List of posts"
-// @Failure 400 {object} map[string]interface{} "Invalid request or error retrieving posts"
-// @Router /posts [get]
+// @Failure 400 {object} ErrorResponse "Invalid request or error retrieving posts"
+// @Failure 404 {object} ErrorResponse "Record not found"
+// @Router /posts/{user}/{id} [put]
 func (pc *PostController) UpdatePostsHandler(c *gin.Context) {
 	var updatContent types.Post
 
 	id, err := strconv.Atoi(c.Params.ByName("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":   "couldn't find the id",
-			"details": err.Error(),
-		})
+		ErrBadRequest(c, err.Error())
+		return
 	}
 
 	if err := c.BindJSON(&updatContent); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":   "insert the right data!",
-			"details": err.Error(),
-		})
+		ErrBadRequest(c, err.Error())
+		return
 	}
 
 	response, err := pc.PostRepository.UpdatePost(c, updatContent.Content, uint(id))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":  "couldn't find the post you wanted",
-			"detail": err.Error(),
-		})
+		ErrRecordNotFound(c, err.Error())
+		return
 	}
 
 	c.JSON(http.StatusOK, &response)
@@ -125,10 +124,8 @@ func (pc *PostController) UpdatePostsHandler(c *gin.Context) {
 // @Produce json
 // @Param user path string true "User ID"
 // @Param id path string true "Post ID"
-// @Success 204 {object} map[string]interface{} "Post deleted successfully"
-// @Failure 400 {object} map[string]interface{} "Bad Request"
-// @Failure 401 {object} map[string]interface{} "Unauthorized"
-// @Failure 404 {object} map[string]interface{} "Not Found"
+// @Success 204 {object} ErrorResponse "Post deleted successfully"
+// @Failure 404 {object} ErrorResponse "Not Found"
 // @Router /posts/{user}/{id} [delete]
 // @Security BearerAuth
 func (pc *PostController) DeletePostHandler(c *gin.Context) {
@@ -138,17 +135,13 @@ func (pc *PostController) DeletePostHandler(c *gin.Context) {
 	_, err := pc.PostRepository.GetPost(c, id)
 
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error":  "user not found",
-			"detail": err.Error(),
-		})
+		ErrRecordNotFound(c, err.Error())
+		return
 	}
 
 	if err := pc.PostRepository.DeletePost(c, id); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error":  "user not found",
-			"detail": err.Error(),
-		})
+		ErrRecordNotFound(c, err.Error())
+		return
 	}
 
 	c.JSON(http.StatusNoContent, gin.H{"message": "success"})
@@ -163,9 +156,7 @@ func (pc *PostController) DeletePostHandler(c *gin.Context) {
 // @Produce json
 // @Param id path string true "Post ID"
 // @Success 200 {object} types.Post "Post retrieved successfully"
-// @Failure 400 {object} map[string]interface{} "Bad Request"
-// @Failure 401 {object} map[string]interface{} "Unauthorized"
-// @Failure 404 {object} map[string]interface{} "Not Found"
+// @Failure 404 {object} ErrorResponse "Not Found"
 // @Router /posts/{id} [get]
 // @Security BearerAuth
 func (pc *PostController) GetPostHandler(c *gin.Context) {
@@ -174,10 +165,8 @@ func (pc *PostController) GetPostHandler(c *gin.Context) {
 	post, err := pc.PostRepository.GetPost(c, id)
 
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error":  "user not found",
-			"detail": err.Error(),
-		})
+		ErrRecordNotFound(c, err.Error())
+		return
 	}
 	c.JSON(http.StatusOK, post)
 }
