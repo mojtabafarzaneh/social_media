@@ -1,9 +1,8 @@
 package middleware
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
+	"github.com/mojtabafarzaneh/social_media/src/handlers"
 	"github.com/mojtabafarzaneh/social_media/src/utils"
 )
 
@@ -11,14 +10,14 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString := c.GetHeader("Authorization")
 		if tokenString == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is required"})
+			handlers.ErrUnauthorizedUser(c, "you have to provide the Authorization header")
 			c.Abort()
 			return
 		}
 
 		user, err := utils.ValidateToken(tokenString, string(utils.SecretKey))
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token: " + err.Error()})
+			handlers.ErrUnauthorizedUser(c, err.Error())
 			c.Abort()
 			return
 

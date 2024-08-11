@@ -1,5 +1,12 @@
 basePath: /
 definitions:
+  handlers.ErrorResponse:
+    properties:
+      error:
+        type: integer
+      message:
+        type: string
+    type: object
   types.AdminRegisterParams:
     properties:
       is_admin:
@@ -95,10 +102,17 @@ paths:
           schema:
             type: string
         "400":
-          description: Invalid input or couldn't generate token
+          description: Provided with incorrect data
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Failed to Authenticate
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
       summary: Register a new admin user
       tags:
       - auth
@@ -123,10 +137,17 @@ paths:
             additionalProperties: true
             type: object
         "400":
-          description: Invalid username or password
+          description: Provided with incorrect data
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: username or password is incorrect
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
       summary: User login
       tags:
       - auth
@@ -153,13 +174,19 @@ paths:
         "400":
           description: Validation failed or bad request
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "409":
+          description: Conflict whit the current state
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "422":
+          description: Provided with invalid data
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/handlers.ErrorResponse'
       summary: Register a new user
       tags:
       - auth
@@ -186,8 +213,13 @@ paths:
         "400":
           description: Invalid request or error retrieving posts
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Record not fount
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Retrieve all posts or filter by content
       tags:
       - posts
@@ -210,21 +242,10 @@ paths:
           description: Post retrieved successfully
           schema:
             $ref: '#/definitions/types.Post'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties: true
-            type: object
         "404":
           description: Not Found
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/handlers.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get a specific post by ID
@@ -258,13 +279,11 @@ paths:
         "400":
           description: Invalid input or error creating post
           schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized access
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Record not found
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/handlers.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Create a new post
@@ -293,26 +312,40 @@ paths:
         "204":
           description: Post deleted successfully
           schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/handlers.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/handlers.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Delete a specific post
+      tags:
+      - posts
+    put:
+      consumes:
+      - application/json
+      description: update posts content by the user or the admins
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of posts
+          schema:
+            items:
+              $ref: '#/definitions/types.Post'
+            type: array
+        "400":
+          description: Invalid request or error retrieving posts
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Record not found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: update posts by admins and user that created it
       tags:
       - posts
   /profile/{id}:
@@ -332,18 +365,15 @@ paths:
         "200":
           description: User profile retrieved successfully
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/handlers.ErrorResponse'
         "400":
           description: Bad Request
           schema:
-            additionalProperties: true
-            type: object
-        "406":
-          description: Not Acceptable
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Record not found
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/handlers.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get user profile
@@ -373,15 +403,15 @@ paths:
         "201":
           description: Subscription created successfully
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/handlers.ErrorResponse'
         "400":
           description: Bad request error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Record not found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Create a new subscription
@@ -410,15 +440,11 @@ paths:
         "400":
           description: Invalid user ID
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/handlers.ErrorResponse'
         "404":
           description: User not found error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/handlers.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get all users subscribed to a user
@@ -447,48 +473,16 @@ paths:
           schema:
             additionalProperties: true
             type: object
-        "400":
-          description: Bad request error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
         "404":
           description: User not found error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/handlers.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get all subscriptions of a user
       tags:
       - Subscriptions
   /users:
-    get:
-      consumes:
-      - application/json
-      description: Retrieves a list of all users. Accessible only by admin users.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: List of users
-          schema:
-            items:
-              $ref: '#/definitions/types.ResponseUser'
-            type: array
-        "400":
-          description: Bad request error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: List all users
-      tags:
-      - Users
     post:
       consumes:
       - application/json
@@ -510,15 +504,15 @@ paths:
         "400":
           description: Bad request error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Record not found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/handlers.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Create a new user
@@ -543,9 +537,7 @@ paths:
         "404":
           description: User not found or failed to delete
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/handlers.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Delete a user
@@ -569,18 +561,10 @@ paths:
           description: User details
           schema:
             $ref: '#/definitions/types.ResponseUser'
-        "401":
-          description: Unauthorized error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
         "404":
           description: User not found error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/handlers.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get a specific user
@@ -610,24 +594,42 @@ paths:
         "202":
           description: Username updated successfully
           schema:
-            additionalProperties:
-              type: string
+            additionalProperties: true
             type: object
         "400":
           description: Invalid request or bad user ID
           schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Failed to update username
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Record not found
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/handlers.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Update a user's username
+      tags:
+      - Users
+  /users/list:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of all users. Accessible only by admin users.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of users
+          schema:
+            items:
+              $ref: '#/definitions/types.ResponseUser'
+            type: array
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List all users
       tags:
       - Users
 schemes:

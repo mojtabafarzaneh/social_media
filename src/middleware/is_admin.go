@@ -2,10 +2,10 @@ package middleware
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
+	"github.com/mojtabafarzaneh/social_media/src/handlers"
 	"github.com/mojtabafarzaneh/social_media/src/utils"
 )
 
@@ -13,7 +13,8 @@ func IsUserAdminMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString := c.GetHeader("Authorization")
 		if tokenString == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "authorization header required!"})
+			handlers.ErrUnauthorizedUser(c, "authorization header required!")
+			c.Abort()
 			return
 		}
 
@@ -24,20 +25,20 @@ func IsUserAdminMiddleware() gin.HandlerFunc {
 			return utils.SecretKey, nil
 		})
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token: " + err.Error()})
+			handlers.ErrUnauthorizedUser(c, err.Error())
 			c.Abort()
 			return
 		}
 
 		claims, ok := tok.Claims.(jwt.MapClaims)
 		if !ok || !tok.Valid {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+			handlers.ErrUnauthorizedUser(c, "invalid token!")
 			c.Abort()
 			return
 		}
 		isAdmin, ok := claims["isAdmin"].(bool)
 		if !ok || !isAdmin {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Access denied: Admins only"})
+			handlers.ErrUnauthorizedUser(c, "access denied! only admins can access this page.")
 			c.Abort()
 			return
 		}

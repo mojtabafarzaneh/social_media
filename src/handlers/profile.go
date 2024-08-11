@@ -25,21 +25,22 @@ func NewProfileControler() *ProfileControler {
 // @Accept json
 // @Produce json
 // @Param id path int true "User ID"
-// @Success 200 {object} map[string]interface{} "User profile retrieved successfully"
-// @Failure 400 {object} map[string]interface{} "Bad Request"
-// @Failure 406 {object} map[string]interface{} "Not Acceptable"
+// @Success 200 {object} ErrorResponse "User profile retrieved successfully"
+// @Failure 400 {object} ErrorResponse "Bad Request"
+// @Failure 404 {object} ErrorResponse "Record not found"
 // @Security BearerAuth
 // @Router /profile/{id} [get]
 func (pc *ProfileControler) GetUserProfileHandler(c *gin.Context) {
 	id, err := strconv.Atoi(c.Params.ByName("id"))
 	if err != nil {
-		c.JSON(http.StatusNotAcceptable, gin.H{"error": err.Error()})
+		ErrBadRequest(c, err.Error())
+		return
 	}
 
 	profile, err := pc.ProfileRepository.GetUserProfile(c, uint(id))
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ErrRecordNotFound(c, err.Error())
 		return
 	}
 
