@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/mojtabafarzaneh/social_media/src/db"
 	"github.com/mojtabafarzaneh/social_media/src/types"
 	"gorm.io/gorm"
@@ -26,9 +27,9 @@ func NewPostgresSubsRepo() *PostgresSubsRepo {
 	}
 }
 
-func (ps *PostgresSubsRepo) GetAllSubscriptions(ctx context.Context, id string) ([]*types.User, error) {
+func (ps *PostgresSubsRepo) GetAllSubscriptions(ctx context.Context, id uuid.UUID) ([]*types.User, error) {
 	var subs []*types.Subscription
-	var targetId []uint
+	var targetId []uuid.UUID
 	var subcripted []*types.User
 
 	//searching for all the users that this user subsribed to.
@@ -50,8 +51,8 @@ func (ps *PostgresSubsRepo) GetAllSubscriptions(ctx context.Context, id string) 
 	return subcripted, nil
 }
 
-func (ps *PostgresSubsRepo) GetAllSubscribed(ctx context.Context, id uint) ([]*types.User, error) {
-	var subscriberId []uint
+func (ps *PostgresSubsRepo) GetAllSubscribed(ctx context.Context, id uuid.UUID) ([]*types.User, error) {
+	var subscriberId []uuid.UUID
 	var subscribers []*types.User
 	var subs []*types.Subscription
 
@@ -73,7 +74,7 @@ func (ps *PostgresSubsRepo) GetAllSubscribed(ctx context.Context, id uint) ([]*t
 	return subscribers, nil
 }
 
-func (ps *PostgresSubsRepo) CreateSubscription(ctx context.Context, targetUsername string, subscriberId string) error {
+func (ps *PostgresSubsRepo) CreateSubscription(ctx context.Context, targetUsername string, subscriberId uuid.UUID) error {
 	var target, subscriber types.User
 	var existingSubscription types.Subscription
 

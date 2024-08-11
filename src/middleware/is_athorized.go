@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/mojtabafarzaneh/social_media/src/handlers"
 	"github.com/mojtabafarzaneh/social_media/src/repository"
 	"github.com/mojtabafarzaneh/social_media/src/types"
@@ -24,7 +25,12 @@ func (uc *Controler) IsUserAuthorized() gin.HandlerFunc {
 
 		id := c.Params.ByName("user")
 
-		user, err := uc.repo.GetUserId(id)
+		userID, err := uuid.Parse(id)
+		if err != nil {
+			handlers.ErrBadRequest(c, err.Error())
+		}
+
+		user, err = uc.repo.GetUserId(userID)
 
 		if err != nil {
 			handlers.ErrUnauthorizedUser(c, err.Error())
@@ -47,8 +53,8 @@ func (uc *Controler) IsUserAuthorized() gin.HandlerFunc {
 			return
 		}
 
-		userIDToken, ok := claims["sub"].(float64)
-		if !ok || uint(userIDToken) != user.ID && claims["isAdmin"] != true {
+		userIDToken, ok := claims["sub"].(string)
+		if !ok || userIDToken != user.ID.String() && claims["isAdmin"] != true {
 			handlers.ErrUnauthorizedUser(c, "you can not access this page!")
 			c.Abort()
 			return

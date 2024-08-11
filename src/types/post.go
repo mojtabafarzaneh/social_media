@@ -2,19 +2,33 @@ package types
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Post struct {
-	ID        uint      `gorm:"primarykey" json:"Id"`
+	ID        uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primarykey" json:"Id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Content   string    `json:"content"`
-	Author    uint      `json:"author"`
+	Author    uuid.UUID `json:"author"`
 }
 
 type PostResponse struct {
-	ID        uint      `json:"Id"`
+	ID        uuid.UUID `json:"Id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Content   string    `json:"content"`
+}
+
+type CreatePostParams struct {
+	Author  uuid.UUID `json:"author"`
+	Content string    `json:"content"`
+}
+
+func CreatePostFromParams(params CreatePostParams) *Post {
+	return &Post{
+		Author:  params.Author,
+		Content: params.Content,
+	}
 }

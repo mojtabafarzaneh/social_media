@@ -3,9 +3,9 @@ package handlers
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/mojtabafarzaneh/social_media/src/repository"
 	"github.com/mojtabafarzaneh/social_media/src/types"
 )
@@ -38,7 +38,12 @@ func (sc *SubsController) GetAllSubscriptions(c *gin.Context) {
 	if !ok {
 		id := c.Params.ByName("id")
 
-		subs, err := sc.SubsRepository.GetAllSubscriptions(c, id)
+		userID, err := uuid.Parse(id)
+		if err != nil {
+			ErrBadRequest(c, err.Error())
+		}
+
+		subs, err := sc.SubsRepository.GetAllSubscriptions(c, userID)
 		if err != nil {
 			ErrRecordNotFound(c, err.Error())
 			return
@@ -78,13 +83,13 @@ func (sc *SubsController) GetAllSubscriptions(c *gin.Context) {
 // @Security BearerAuth
 // @Router /subs/subscribers/{id} [get]
 func (sc *SubsController) GetAllSubscribed(c *gin.Context) {
-	id, err := strconv.Atoi(c.Params.ByName("id"))
+	id := c.Params.ByName("id")
+	userID, err := uuid.Parse(id)
 	if err != nil {
 		ErrBadRequest(c, err.Error())
-		return
 	}
 
-	subscriber, err := sc.SubsRepository.GetAllSubscribed(c, uint(id))
+	subscriber, err := sc.SubsRepository.GetAllSubscribed(c, userID)
 
 	if err != nil {
 		ErrRecordNotFound(c, err.Error())
@@ -127,7 +132,12 @@ func (sc *SubsController) CreateSubs(c *gin.Context) {
 		return
 	}
 
-	err := sc.SubsRepository.CreateSubscription(c, requestedUser.Username, id)
+	userID, err := uuid.Parse(id)
+	if err != nil {
+		ErrBadRequest(c, err.Error())
+	}
+
+	err = sc.SubsRepository.CreateSubscription(c, requestedUser.Username, userID)
 	if err != nil {
 		ErrRecordNotFound(c, err.Error())
 		return

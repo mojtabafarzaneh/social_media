@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/mojtabafarzaneh/social_media/src/repository"
 	"github.com/mojtabafarzaneh/social_media/src/types"
 )
@@ -52,7 +52,12 @@ func (cl *UserControler) ListUserHandler(c *gin.Context) {
 func (cl *UserControler) GetUserHandler(c *gin.Context) {
 
 	var id = c.Params.ByName("id")
-	user, err := cl.UserRepository.GetUserByID(c, id)
+
+	userID, err := uuid.Parse(id)
+	if err != nil {
+		ErrBadRequest(c, err.Error())
+	}
+	user, err := cl.UserRepository.GetUserByID(c, userID)
 
 	if err != nil {
 		ErrRecordNotFound(c, err.Error())
@@ -120,15 +125,18 @@ func (cl *UserControler) InsertUserHandler(c *gin.Context) {
 func (cl *UserControler) DeleteUserHandler(c *gin.Context) {
 
 	var id = c.Params.ByName("id")
-
-	_, err := cl.UserRepository.GetUserByID(c, id)
+	userID, err := uuid.Parse(id)
+	if err != nil {
+		ErrBadRequest(c, err.Error())
+	}
+	_, err = cl.UserRepository.GetUserByID(c, userID)
 
 	if err != nil {
 		ErrRecordNotFound(c, err.Error())
 		return
 	}
 
-	err = cl.UserRepository.DeleteUser(c, id)
+	err = cl.UserRepository.DeleteUser(c, userID)
 	if err != nil {
 		ErrRecordNotFound(c, err.Error())
 	}
@@ -151,10 +159,11 @@ func (cl *UserControler) DeleteUserHandler(c *gin.Context) {
 func (cl *UserControler) UpdateUsernameHandler(c *gin.Context) {
 	var params types.UpdateUsernameParams
 
-	id, err := strconv.Atoi(c.Param("id"))
+	id := c.Param("id")
+
+	userID, err := uuid.Parse(id)
 	if err != nil {
 		ErrBadRequest(c, err.Error())
-		return
 	}
 
 	if err := c.BindJSON(&params); err != nil {
@@ -162,7 +171,7 @@ func (cl *UserControler) UpdateUsernameHandler(c *gin.Context) {
 		return
 	}
 
-	err = cl.UserRepository.UpdateUsername(params.Username, uint(id))
+	err = cl.UserRepository.UpdateUsername(params.Username, userID)
 	if err != nil {
 		ErrRecordNotFound(c, err.Error())
 		return

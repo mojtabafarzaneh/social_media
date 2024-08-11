@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/mojtabafarzaneh/social_media/src/repository"
 	"github.com/mojtabafarzaneh/social_media/src/types"
 )
@@ -26,19 +26,21 @@ func NewPostController() *PostController {
 // @Accept json
 // @Produce json
 // @Param user path string true "User ID"
-// @Param body body types.Post true "Post details"
+// @Param body body types.CreatePostParams true "Post details"
 // @Success 201 {object} types.Post "Post created successfully"
 // @Failure 400 {object} ErrorResponse "Invalid input or error creating post"
 // @Failure 404 {object} ErrorResponse "Record not found"
 // @Router /posts/{user} [post]
 func (pc *PostController) CreatePostHandler(c *gin.Context) {
-	var posts types.Post
-	if err := c.ShouldBindJSON(&posts); err != nil {
+	var params types.CreatePostParams
+	if err := c.ShouldBindJSON(&params); err != nil {
 		ErrBadRequest(c, err.Error())
 		return
 	}
 
-	res, err := pc.PostRepository.InsertPost(c, posts)
+	post := types.CreatePostFromParams(params)
+
+	res, err := pc.PostRepository.InsertPost(c, *post)
 
 	if err != nil {
 		ErrRecordNotFound(c, err.Error())
@@ -82,24 +84,27 @@ func (pc *PostController) ListPostsHandler(c *gin.Context) {
 
 }
 
-// UpdatePostHandler handles updating of a post
-// @Summary update posts by admins and user that created it
-// @Description update posts content by the user or the admins
+// UpdatePostsHandler godoc
+// @Summary      Update a Post
+// @Description  Update the content of an existing post by its UUID.
+// @Tags         posts
+// @Accept       json
+// @Produce      json
+// @Param        id    path     string          true  "Post ID"
+// @Param        user  path     string          true  "User ID"
+// @Param        post  body     types.Post      true  "Post Content"
+// @Success      200  {object}  types.Post      "Updated Post"
+// @Failure      400  {object}  ErrorResponse   "Bad Request"
+// @Failure      404  {object}  ErrorResponse   "Post Not Found"
 // @security BearerAuth
-// @Tags posts
-// @Accept json
-// @Produce json
-// @Success 200 {array} types.Post "List of posts"
-// @Failure 400 {object} ErrorResponse "Invalid request or error retrieving posts"
-// @Failure 404 {object} ErrorResponse "Record not found"
-// @Router /posts/{user}/{id} [put]
+// @Router       /posts/{user}/{id} [put]
 func (pc *PostController) UpdatePostsHandler(c *gin.Context) {
 	var updatContent types.Post
 
-	id, err := strconv.Atoi(c.Params.ByName("id"))
+	id := c.Params.ByName("id")
+	userID, err := uuid.Parse(id)
 	if err != nil {
 		ErrBadRequest(c, err.Error())
-		return
 	}
 
 	if err := c.BindJSON(&updatContent); err != nil {
@@ -107,7 +112,7 @@ func (pc *PostController) UpdatePostsHandler(c *gin.Context) {
 		return
 	}
 
-	response, err := pc.PostRepository.UpdatePost(c, updatContent.Content, uint(id))
+	response, err := pc.PostRepository.UpdatePost(c, updatContent.Content, userID)
 	if err != nil {
 		ErrRecordNotFound(c, err.Error())
 		return
@@ -132,14 +137,19 @@ func (pc *PostController) DeletePostHandler(c *gin.Context) {
 
 	id := c.Params.ByName("id")
 
-	_, err := pc.PostRepository.GetPost(c, id)
+	postID, err := uuid.Parse(id)
+	if err != nil {
+		ErrBadRequest(c, err.Error())
+	}
+
+	_, err = pc.PostRepository.GetPost(c, postID)
 
 	if err != nil {
 		ErrRecordNotFound(c, err.Error())
 		return
 	}
 
-	if err := pc.PostRepository.DeletePost(c, id); err != nil {
+	if err := pc.PostRepository.DeletePost(c, postID); err != nil {
 		ErrRecordNotFound(c, err.Error())
 		return
 	}
@@ -161,8 +171,11 @@ func (pc *PostController) DeletePostHandler(c *gin.Context) {
 // @Security BearerAuth
 func (pc *PostController) GetPostHandler(c *gin.Context) {
 	id := c.Params.ByName("id")
-
-	post, err := pc.PostRepository.GetPost(c, id)
+	userID, err := uuid.Parse(id)
+	if err != nil {
+		ErrBadRequest(c, err.Error())
+	}
+	post, err := pc.PostRepository.GetPost(c, userID)
 
 	if err != nil {
 		ErrRecordNotFound(c, err.Error())
