@@ -1,9 +1,11 @@
 package types
 
+import "github.com/google/uuid"
+
 type Subscription struct {
-	ID           uint `gorm:"PrimaryKey" json:"Id"`
-	SubscriberID uint `json:"subscriberId"`
-	TargetID     uint `json:"targetId"`
+	ID           uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primarykey" json:"Id"`
+	SubscriberID uuid.UUID `json:"subscriberId"`
+	TargetID     uuid.UUID `json:"targetId"`
 }
 
 type SubscriberResponse struct {

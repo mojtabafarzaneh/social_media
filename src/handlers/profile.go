@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/mojtabafarzaneh/social_media/src/repository"
 )
 
@@ -24,20 +24,19 @@ func NewProfileControler() *ProfileControler {
 // @Tags profile
 // @Accept json
 // @Produce json
-// @Param id path int true "User ID"
+// @Param id path string true "User ID"
 // @Success 200 {object} ErrorResponse "User profile retrieved successfully"
 // @Failure 400 {object} ErrorResponse "Bad Request"
 // @Failure 404 {object} ErrorResponse "Record not found"
 // @Security BearerAuth
 // @Router /profile/{id} [get]
 func (pc *ProfileControler) GetUserProfileHandler(c *gin.Context) {
-	id, err := strconv.Atoi(c.Params.ByName("id"))
+	id := c.Params.ByName("id")
+	userID, err := uuid.Parse(id)
 	if err != nil {
 		ErrBadRequest(c, err.Error())
-		return
 	}
-
-	profile, err := pc.ProfileRepository.GetUserProfile(c, uint(id))
+	profile, err := pc.ProfileRepository.GetUserProfile(c, userID)
 
 	if err != nil {
 		ErrRecordNotFound(c, err.Error())

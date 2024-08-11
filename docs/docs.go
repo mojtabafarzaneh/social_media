@@ -305,7 +305,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/types.Post"
+                            "$ref": "#/definitions/types.CreatePostParams"
                         }
                     }
                 ],
@@ -338,7 +338,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "update posts content by the user or the admins",
+                "description": "Update the content of an existing post by its UUID.",
                 "consumes": [
                     "application/json"
                 ],
@@ -348,25 +348,47 @@ const docTemplate = `{
                 "tags": [
                     "posts"
                 ],
-                "summary": "update posts by admins and user that created it",
+                "summary": "Update a Post",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Post ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Post Content",
+                        "name": "post",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.Post"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "List of posts",
+                        "description": "Updated Post",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/types.Post"
-                            }
+                            "$ref": "#/definitions/types.Post"
                         }
                     },
                     "400": {
-                        "description": "Invalid request or error retrieving posts",
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "Record not found",
+                        "description": "Post Not Found",
                         "schema": {
                             "$ref": "#/definitions/handlers.ErrorResponse"
                         }
@@ -442,7 +464,7 @@ const docTemplate = `{
                 "summary": "Get user profile",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "User ID",
                         "name": "id",
                         "in": "path",
@@ -893,6 +915,17 @@ const docTemplate = `{
                 }
             }
         },
+        "types.CreatePostParams": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                }
+            }
+        },
         "types.CreateUserParams": {
             "type": "object",
             "properties": {
@@ -922,10 +955,10 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "Id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "author": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "content": {
                     "type": "string"
@@ -948,7 +981,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "posts": {
                     "type": "array",

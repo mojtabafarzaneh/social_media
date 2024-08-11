@@ -3,6 +3,7 @@ package repository
 import (
 	"errors"
 
+	"github.com/google/uuid"
 	"github.com/mojtabafarzaneh/social_media/src/db"
 	"github.com/mojtabafarzaneh/social_media/src/types"
 	"gorm.io/gorm"
@@ -18,7 +19,7 @@ func NewPostgresMiddlewareRepo() *PostgresMiddlewareRepo {
 	}
 }
 
-func (pm *PostgresMiddlewareRepo) GetUserId(id string) (*types.User, error) {
+func (pm *PostgresMiddlewareRepo) GetUserId(id uuid.UUID) (*types.User, error) {
 	var user types.User
 
 	if err := pm.DB.First(&user, id).Error; errors.Is(err, gorm.ErrRecordNotFound) {

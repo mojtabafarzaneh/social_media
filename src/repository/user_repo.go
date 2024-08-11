@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/mojtabafarzaneh/social_media/src/db"
 	"github.com/mojtabafarzaneh/social_media/src/types"
 	"gorm.io/gorm"
@@ -35,7 +36,7 @@ func (r *PostgresRep) ListUser(ctx context.Context) ([]*types.User, error) {
 	return users, nil
 }
 
-func (r *PostgresRep) GetUserByID(ctx context.Context, id string) ([]*types.User, error) {
+func (r *PostgresRep) GetUserByID(ctx context.Context, id uuid.UUID) ([]*types.User, error) {
 	var user []*types.User
 
 	err := r.DB.Preload("Post").First(&user, id).Error
@@ -59,7 +60,7 @@ func (r *PostgresRep) CreateUser(ctx context.Context, user types.User) ([]*types
 	return users, nil
 }
 
-func (r *PostgresRep) DeleteUser(ctx context.Context, id string) error {
+func (r *PostgresRep) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	var user []*types.User
 	if err := r.DB.Delete(user, id).Error; err != nil {
 		return err
@@ -68,7 +69,7 @@ func (r *PostgresRep) DeleteUser(ctx context.Context, id string) error {
 	return nil
 }
 
-func (r *PostgresRep) UpdateUsername(username string, id uint) error {
+func (r *PostgresRep) UpdateUsername(username string, id uuid.UUID) error {
 	var user []*types.User
 	err := r.DB.Model(&user).Where("id = ?", id).Update("username", username).Error
 

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/mojtabafarzaneh/social_media/src/db"
 	"github.com/mojtabafarzaneh/social_media/src/types"
 	"gorm.io/gorm"
@@ -23,7 +24,7 @@ func NewPostgresProfileRepo() *PostgresProfileRepo {
 	}
 }
 
-func (pr *PostgresProfileRepo) GetUserProfile(ctx context.Context, id uint) (*types.Profile, error) {
+func (pr *PostgresProfileRepo) GetUserProfile(ctx context.Context, id uuid.UUID) (*types.Profile, error) {
 
 	var profile types.Profile
 
@@ -63,7 +64,7 @@ func (pr *PostgresProfileRepo) GetUserProfile(ctx context.Context, id uint) (*ty
 	return &profile, nil
 }
 
-func (pr *PostgresProfileRepo) GetSubsriptionsCount(ctx context.Context, id uint) (int64, int64, error) {
+func (pr *PostgresProfileRepo) GetSubsriptionsCount(ctx context.Context, id uuid.UUID) (int64, int64, error) {
 	var subscriberCount int64
 	var targetCount int64
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/google/uuid"
 	"github.com/mojtabafarzaneh/social_media/src/db"
 	"github.com/mojtabafarzaneh/social_media/src/types"
 	"gorm.io/gorm"
@@ -46,7 +47,7 @@ func (pr *PostgresPostRepo) InsertPost(ctx context.Context, post types.Post) ([]
 	return createPost, nil
 }
 
-func (pr *PostgresPostRepo) UpdatePost(ctx context.Context, content string, id uint) (*types.Post, error) {
+func (pr *PostgresPostRepo) UpdatePost(ctx context.Context, content string, id uuid.UUID) (*types.Post, error) {
 	var posts *types.Post
 
 	if err := pr.DB.WithContext(ctx).Model(&posts).Where("id = ?", id).Update("Content", content).Error; err != nil {
@@ -59,7 +60,7 @@ func (pr *PostgresPostRepo) UpdatePost(ctx context.Context, content string, id u
 	return posts, nil
 }
 
-func (pr *PostgresPostRepo) DeletePost(ctx context.Context, id string) error {
+func (pr *PostgresPostRepo) DeletePost(ctx context.Context, id uuid.UUID) error {
 	var posts []*types.Post
 
 	if err := pr.DB.WithContext(ctx).Delete(posts, id).Error; err != nil {
@@ -69,7 +70,7 @@ func (pr *PostgresPostRepo) DeletePost(ctx context.Context, id string) error {
 	return nil
 }
 
-func (pr *PostgresPostRepo) GetPost(ctx context.Context, id string) ([]*types.Post, error) {
+func (pr *PostgresPostRepo) GetPost(ctx context.Context, id uuid.UUID) ([]*types.Post, error) {
 	var posts []*types.Post
 
 	if err := pr.DB.WithContext(ctx).First(&posts, id).Error; err != nil {

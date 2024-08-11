@@ -5,24 +5,25 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
-	ID         uint `gorm:"primarykey"`
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
-	Username   string `gorm:"unique" json:"username"`
-	Password   string `json:"password"`
-	Email      string `gorm:"unique" json:"email"`
-	Post       []Post `gorm:"foreignKey:Author"`
-	IsAdmin    bool
-	Subscriber []Subscription `gorm:"foreignKey:SubscriberID"`
-	Target     []Subscription `gorm:"foreignKey:TargetID"`
+	ID         uuid.UUID      `gorm:"type:uuid;default:uuid_generate_v4();primarykey" json:"Id"`
+	CreatedAt  time.Time      `gorm:"not null" json:"created_at"`
+	UpdatedAt  time.Time      `gorm:"not null" json:"updated_at"`
+	Username   string         `gorm:"unique;size:100" json:"username"`
+	Password   string         `gorm:"size:100" json:"password"`
+	Email      string         `gorm:"unique;size:100" json:"email"`
+	Post       []Post         `gorm:"foreignKey:Author;constraint:OnDelete:CASCADE"`
+	IsAdmin    bool           `gorm:"default:false"`
+	Subscriber []Subscription `gorm:"foreignKey:SubscriberID;constraint:OnDelete:CASCADE"`
+	Target     []Subscription `gorm:"foreignKey:TargetID;constraint:OnDelete:CASCADE"`
 	Profile    Profile
 }
 type Profile struct {
-	UserId            uint
+	UserId            uuid.UUID
 	SubscriberCount   uint `json:"subscriberCount"`
 	SubscriptionCount uint `json:"subscriptionCount"`
 }
@@ -34,7 +35,7 @@ type CreateUserParams struct {
 }
 
 type ResponseUser struct {
-	ID        uint      `json:"id"`
+	ID        uuid.UUID `json:"id"`
 	Username  string    `json:"username"`
 	Email     string    `json:"email"`
 	CreatedAt time.Time `json:"created_at"`
