@@ -17,6 +17,7 @@ Before installing the project, ensure you have the following prerequisites insta
 
 - Go 1.18 or higher
 - Git
+- Docker
 
 ### Steps
 
