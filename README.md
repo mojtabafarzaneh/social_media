@@ -1,6 +1,6 @@
-# Social Media Analysis Project
+# Social Media Replica Project
 
-This repository contains a social media replica project developed in Go.
+This repository contains a social media replica project developed in Go. 
 
 ## Table of Contents
 
@@ -41,6 +41,7 @@ Before installing the project, ensure you have the following prerequisites insta
 
     ```bash
     make build
+    docker-compose up -d
     ```
 
 4. **Run the project**:
